@@ -11,12 +11,17 @@ threaded version of lutrond
 #include <iostream>
 #include <queue>
 #include <unistd.h>
+#include <mutex>
 
 #define _DEBUG true
 
-int tcount =0;                      // thread counter - simple wait mechanism for now
+int tcount = 0;                     // thread counter - simple wait mechanism for now
                                     // OK for thread finnishing normally, but won't
                                     // work if thread dies abnornally
+std::mutex tlock;                   // general purpose thread lock
+                                    // TODO better thread monitor. All this does at present is
+                                    // increment counter when thread starts, decrement when ends
+                                    // main thread loops until count == 0
 
 bool debug = _DEBUG;
 struct MessageQueue                 // define a queue struct for strings
@@ -25,6 +30,9 @@ struct MessageQueue                 // define a queue struct for strings
     pthread_mutex_t mu_queue;
     pthread_cond_t cond;
 };
+
+
+
 MessageQueue queue;                 // create in instance of a queue
 MessageQueue *mq = &queue;          // and a pointer to this queue
 
@@ -58,7 +66,6 @@ void pusher()
     std::string msg;        // C++ string
     
     while(1){
-        usleep(700000);
         msg = getString();
         pushq(msg);
         if( msg.empty()){
@@ -69,10 +76,14 @@ void pusher()
 }
 
 void* lutron_connection(void *arg){
+    tlock.lock();
     ++tcount;
+    tlock.unlock();
     if(debug) printf("lutron thread started\n");
     pusher();
+    tlock.lock();
     --tcount;
+    tlock.unlock();
     return(NULL);
 }
 
@@ -81,10 +92,33 @@ void* lutron_connection(void *arg){
 //*************** Client connect thread
 
 void* client_listen(void *arg){
+    
+    std::string str;
+    
+    tlock.lock();
     ++tcount;
+    tlock.unlock();
     if(debug) printf("client thread started\n");
-    usleep(3000000);
+    while(1)                              // queue reading (popping) loop
+    {
+        pthread_mutex_lock(&mq->mu_queue);       // lock queue
+        if(!mq->msg_queue.empty())               // if queue not empty
+        {
+            str = mq->msg_queue.front();         // read string at front
+            //  of queue
+            mq->msg_queue.pop();                 // and pop it
+            pthread_mutex_unlock(&mq->mu_queue); // unlock queue
+            pthread_cond_signal(&mq->cond);      // sig any blocked threads
+            if ( str.empty()){                   // if empty string break
+                // loop we're done
+                break; // while
+            }
+            std::cout << tcount << str << "\n";
+        }
+    }//while 1
+    tlock.lock();
     --tcount;
+    tlock.unlock();
     return(NULL);
 }
 
@@ -94,7 +128,7 @@ void* client_listen(void *arg){
 
 int main(int argc, const char * argv[]) {
     
-    std::string str;
+    
     pthread_t lutron_tid,client_tid;                      // Thread IDs
     int thread_error;
     
@@ -112,26 +146,16 @@ int main(int argc, const char * argv[]) {
         if(debug) printf("Thread created successfully\n");
     
     
+    bool done = false;
+    while( ! done ){
+        usleep(20000);
+        tlock.lock();
+        if(tcount == 0) done = true;
+        tlock.unlock();
+    }
     
-    while(1)                              // queue reading (popping) loop
-    {
-        pthread_mutex_lock(&mq->mu_queue);       // lock queue
-        if(!mq->msg_queue.empty())               // if queue not empty
-        {
-            str = mq->msg_queue.front();         // read string at front
-            //  of queue
-            mq->msg_queue.pop();                 // and pop it
-            pthread_mutex_unlock(&mq->mu_queue); // unlock queue
-            pthread_cond_signal(&mq->cond);      // sig any blocked threads
-            if ( str.empty()){                   // if empty string break
-                // loop we're done
-                break; // while
-            }
-            std::cout << tcount << str << "\n";
-        }
-        usleep(500000);
-    }//while 1
     std::cout << "Final tcount =" << tcount << "\n";
+    
     exit(0);
 }
 
