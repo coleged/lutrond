@@ -37,8 +37,8 @@ daemon_t admin = {  0,                          // pid
                     NULL                        // logfp
 };
 
-client_t listner = {
-                    0       //port
+client_t listener = {
+                    (int){0}       //port
 };
 
 lutron_t lutron ={
@@ -92,7 +92,7 @@ int kill_flag = FALSE;     // set true is this is a killer instance
 /**********************************************************************
           MAIN
  *********************************************************************/
-int main(int argc, const char * argv[]) {
+int main(int argc, const char *argv[]) {
     
   pthread_t lutron_tid,client_tid;                      // Thread IDs
   int thread_error;
@@ -124,11 +124,11 @@ int main(int argc, const char * argv[]) {
                 
             case 'c': // Alternate config file
                 admin.conf_file=(char *)malloc(sizeof(optarg));
-                strcpy(conf_file,optarg);
+                strcpy(admin.conf_file,optarg);
                 break;
                 
             case 'p': // Alternate listening port
-                listner.port = atoi(optarg);
+                listener.port = atoi(optarg);
                 break;
                 
             case 't': // test mode, no Lutron connection
@@ -155,6 +155,14 @@ int main(int argc, const char * argv[]) {
     
     if(debug)printf("command ops parsed\n");
     if(debug)printf("logfile: %s\n",admin.log_file);
+    
+    if (readConfFile(admin.conf_file)==EXIT_FAILURE){
+        fprintf(stderr,"Running without conf file\n");
+    };
+    
+    logOpen(admin.log_file);
+    logMessage("Starting:%s",(char *)argstr(argc,(char **)argv));
+    
 
     
     // create the worker threads

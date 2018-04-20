@@ -15,5 +15,9 @@ extern std::mutex tlock;
 extern int tcount;
 extern bool debug;
 extern lut_dev_t device[NO_OF_DEVICES]; // database of Lutron devices
+extern client_t listener;
+extern lutron_t lutron;
+extern daemon_t admin;
+extern flags_t flag;
 
 #endif /* externals_h */

@@ -43,7 +43,10 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
-//#include <libconfig.h>
+#include "/usr/local/include/libconfig.h"   // only way I could get Xcode to find this
+                                            // I've wasted way too much time trying to find
+                                            // include and lib path flags in xcode for now, so
+                                            // have used brute force for now
 #include <time.h>
 #include <syslog.h>
 #include "become_daemon.h"
@@ -83,7 +86,8 @@
 #define TELNET_PROG     "/usr/bin/telnet"
 #define SYSLOG_OPT (LOG_PID | LOG_NDELAY | LOG_NOWAIT)
 #define SYSLOG_FACILITY LOG_LOCAL7
-#define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
+//#define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
+#define CONFIG_FILE     "/tmp/lutrond.conf"
 #define DEFAULT_PORT    "4534"  // this must be a *char    *+
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
@@ -155,12 +159,13 @@ char *lerror(int number);       // lerror.c returns pointer to string containing
                                 // description of Lutron error
 void beat_test();
 int lutkill(const char *);
-char *argstr(int count, char *arg_list[]); // args to string	
+char *argstr(int count, char **arg_list); // args to string
 char **strarg(char *str);		   // string to args
 int testRoot();
 void* client_listen(void *arg);
 void* lutron_connection(void *arg);
 char *lerror(int number);
 void printLerrors();
+int readConfFile(char *);
 
 /**********************  END END END ***********************************/

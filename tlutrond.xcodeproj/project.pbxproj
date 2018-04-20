@@ -12,6 +12,9 @@
 		B942FED32088D28D004B7CF9 /* lutron_connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FED22088D28D004B7CF9 /* lutron_connect.cpp */; };
 		B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDA20894811004B7CF9 /* become_daemon.cpp */; };
 		B942FEDD2089482F004B7CF9 /* lerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDC2089482F004B7CF9 /* lerror.cpp */; };
+		B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDE208A2104004B7CF9 /* conf_file.cpp */; };
+		B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B942FEE3208A4EE1004B7CF9 /* libconfig++.a */; };
+		B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE5208A8957004B7CF9 /* misc_function.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,6 +44,10 @@
 		B942FED92089468C004B7CF9 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		B942FEDA20894811004B7CF9 /* become_daemon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = become_daemon.cpp; sourceTree = "<group>"; };
 		B942FEDC2089482F004B7CF9 /* lerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lerror.cpp; sourceTree = "<group>"; };
+		B942FEDE208A2104004B7CF9 /* conf_file.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = conf_file.cpp; sourceTree = "<group>"; };
+		B942FEE1208A4E1F004B7CF9 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ..; sourceTree = "<group>"; };
+		B942FEE3208A4EE1004B7CF9 /* libconfig++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libconfig++.a"; path = "lib/libconfig++.a"; sourceTree = "<group>"; };
+		B942FEE5208A8957004B7CF9 /* misc_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = misc_function.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +67,7 @@
 			children = (
 				B942FEC5208882BE004B7CF9 /* tlutrond */,
 				B942FEC4208882BE004B7CF9 /* Products */,
+				B942FEE0208A4E1F004B7CF9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -84,10 +93,21 @@
 				B942FEDA20894811004B7CF9 /* become_daemon.cpp */,
 				B942FED12088D17C004B7CF9 /* externals.h */,
 				B942FEC6208882BE004B7CF9 /* main.cpp */,
+				B942FEE5208A8957004B7CF9 /* misc_function.cpp */,
+				B942FEDE208A2104004B7CF9 /* conf_file.cpp */,
 				B942FECD2088B692004B7CF9 /* client_connect.cpp */,
 				B942FED22088D28D004B7CF9 /* lutron_connect.cpp */,
 			);
 			path = tlutrond;
+			sourceTree = "<group>";
+		};
+		B942FEE0208A4E1F004B7CF9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B942FEE3208A4EE1004B7CF9 /* libconfig++.a */,
+				B942FEE1208A4E1F004B7CF9 /* src */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -147,8 +167,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				B942FED32088D28D004B7CF9 /* lutron_connect.cpp in Sources */,
+				B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */,
 				B942FEC7208882BE004B7CF9 /* main.cpp in Sources */,
 				B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */,
+				B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */,
 				B942FEDD2089482F004B7CF9 /* lerror.cpp in Sources */,
 				B942FECE2088B692004B7CF9 /* client_connect.cpp in Sources */,
 			);
@@ -271,6 +293,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 48XZUZUMJ4;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -280,6 +306,10 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 48XZUZUMJ4;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
