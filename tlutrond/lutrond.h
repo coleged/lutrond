@@ -88,6 +88,7 @@
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
 
+
 typedef struct{
     bool daemon;
     bool debug;
@@ -95,7 +96,6 @@ typedef struct{
     bool connected;
     bool dump;
     bool kill;
-    
 }flags_t;
 
 typedef struct{
@@ -105,9 +105,8 @@ typedef struct{
 }client_t;   // client socket
 
 typedef struct{
-    pthread_t  tid; // Thread ID
     char *host;     // lutron hostname
-    int tport;      // telnet port number
+    char *lport;      // telnet port number
     char *user;
     char *password;
     int fd;     // lutron FD for PTY (was lutron)
@@ -115,11 +114,11 @@ typedef struct{
 
 typedef struct{
     pid_t pid;
+    char *conf_file;
     char *log_file;
     char *pid_file;
     char *db_file;
     FILE *logfp;
-    
 }daemon_t;            // daemon config parameters
 
 // TODO - rewrite all this using a database!!!!!!!

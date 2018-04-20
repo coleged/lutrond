@@ -30,11 +30,27 @@ flags_t flag = {
 };
 
 daemon_t admin = {  0,                          // pid
+                    (char *)CONFIG_FILE,        // conf_file
                     (char *)LOG_FILE_NAME,      // log_file
                     (char *)PID_FILE_NAME,      // pid_file
                     (char *)DB_FILE_NAME,       // db_file
                     NULL                        // logfp
 };
+
+client_t listner = {
+                    0       //port
+};
+
+lutron_t lutron ={
+                    (char *)LUTRON_HOST,     // lutron hostname
+                    (char *)LUTRON_PORT,     // telnet port number
+                    (char *)LUTRON_USER,     // Lutron UID
+                    (char *)LUTRON_PASS,     // Lutron password
+                    0                        // lutron FD for PTY (was lutron)
+    
+};
+
+
 
 bool debug = flag.debug;              // TODO tidy out references to "debug"
 MessageQueue_t queue;                 // create in instance of a queue
@@ -44,6 +60,7 @@ lut_dev_t device[NO_OF_DEVICES];    // database of Lutron devices
 jmp_buf JumpBuffer;        // for non-local goto in signal traps
 struct sigaction saCHLD,saHUP;      // two trap handlers. TODO combine
 
+/*  DELETE ALL THIS .........
 char d_host[]                = LUTRON_HOST;
 const char *host     = d_host;
 char d_tport[]                = LUTRON_PORT;
@@ -69,6 +86,7 @@ static FILE *logfp;
 int lutron;        // file handle for telnet to Lutron
 int dump_db_flag = FALSE;
 int kill_flag = FALSE;     // set true is this is a killer instance
+*/
 
 
 /**********************************************************************
@@ -93,33 +111,33 @@ int main(int argc, const char * argv[]) {
                 
             case 'D': // run in debug mode. Use as first option to catch all in this
                 // switch block
-                debug=TRUE;
+                flag.debug=true;
                 printf("Debug mode set\n");
                 break;
                 
             case 'd': // Run as a daemon
-                if(debug) printf("Running as a Daemon\n");
-                becomeDaemon(  (int)(   BD_NO_CLOSE_FILES |
+                if(flag.debug) printf("Running as a Daemon\n");
+                becomeDaemon((int)(   BD_NO_CLOSE_FILES |
                                         BD_NO_CHDIR |
                                         BD_NO_REOPEN_STD_FDS));
                 break;
                 
             case 'c': // Alternate config file
-                conf_file=(char *)malloc(sizeof(optarg));
+                admin.conf_file=(char *)malloc(sizeof(optarg));
                 strcpy(conf_file,optarg);
                 break;
                 
             case 'p': // Alternate listening port
-                port = atoi(optarg);
+                listner.port = atoi(optarg);
                 break;
                 
             case 't': // test mode, no Lutron connection
-                test_mode = TRUE;
+                flag.test = true;
                 if(debug) printf("test mode\n");
                 break;
                 
             case 'k': // test mode, no Lutron connection
-                kill_flag = TRUE;
+                flag.kill = true;
                 if(debug) printf("kill mode\n");
                 break;
                 
