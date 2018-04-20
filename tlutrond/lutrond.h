@@ -17,6 +17,7 @@
 ***********/
 #include <iostream>
 #include <queue>
+#include <cstdlib>
 #include <unistd.h>
 #include <mutex>
 #include <stdio.h>
@@ -42,20 +43,20 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
-// #include <libconfig.h>
+//#include <libconfig.h>
 #include <time.h>
 #include <syslog.h>
-// #include "become_daemon.h"
-// #include "tlpi_hdr.h"		// uses some code snarfed from TLPI book
+#include "become_daemon.h"
+#include "tlpi_hdr.h"		// uses some code snarfed from TLPI book
 #undef		min
 #undef		max
-// #include "unp.h"		// uses some code snarfed from the UNP book
+#include "unp.h"		// uses some code snarfed from the UNP book
 
-#ifndef DEBUG
-#define DEBUG 0 		// dont change this - pass it via -DDEBUG=1 at compile
+#ifndef _DEBUG
+#define _DEBUG true		// dont change this - pass it via -D_DEBUG=1 at compile
 #endif
-#ifndef TEST_MODE		// dont change this - pass it via -DTEST_MODE=1 at compile
-#define TEST_MODE 0		// TEST_MODE = No Lutron connection
+#ifndef _TEST_MODE		// dont change this - pass it via -D_TEST_MODE=1 at compile
+#define _TEST_MODE false		// TEST_MODE = No Lutron connection
 #endif				// can also be set at runtime with -t option
 
 #define MY_NAME "lutrond"
@@ -87,6 +88,40 @@
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
 
+typedef struct{
+    bool daemon;
+    bool debug;
+    bool test;
+    bool connected;
+    bool dump;
+    bool kill;
+    
+}flags_t;
+
+typedef struct{
+    int port;
+    
+    
+}client_t;   // client socket
+
+typedef struct{
+    pthread_t  tid; // Thread ID
+    char *host;     // lutron hostname
+    int tport;      // telnet port number
+    char *user;
+    char *password;
+    int fd;     // lutron FD for PTY (was lutron)
+}lutron_t;
+
+typedef struct{
+    pid_t pid;
+    char *log_file;
+    char *pid_file;
+    char *db_file;
+    FILE *logfp;
+    
+}daemon_t;            // daemon config parameters
+
 // TODO - rewrite all this using a database!!!!!!!
 // Array of Lutron Devices index is what Lutron call Integration ID
 typedef struct {
@@ -102,7 +137,16 @@ typedef struct {
             char *name;  // Friendly name for component
             int value;   // state, i.e. 0 for off/disable, 100 for 100% on etc
            } comp[NO_OF_COMPS]; //  1 to NO_OF_COMPS-1 (ignore 0)
-       } lut_dev_t; 
+       } lut_dev_t;
+
+struct MessageQueue_t                 // define a queue struct for strings
+{
+    std::queue<std::string> msg_queue;
+    pthread_mutex_t mu_queue;
+    pthread_cond_t cond;
+};
+
+
 
 // function prototypes
 void logMessage(const char *format, ...);
@@ -115,6 +159,9 @@ int lutkill(const char *);
 char *argstr(int count, char *arg_list[]); // args to string	
 char **strarg(char *str);		   // string to args
 int testRoot();
-
+void* client_listen(void *arg);
+void* lutron_connection(void *arg);
+char *lerror(int number);
+void printLerrors();
 
 /**********************  END END END ***********************************/

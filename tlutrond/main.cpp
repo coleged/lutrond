@@ -8,129 +8,136 @@ threaded version of lutrond
 
 */
 
-#include <iostream>
-#include <queue>
-#include <unistd.h>
-#include <mutex>
+#include "lutrond.h"
 
-#define _DEBUG true
 
+// Global declarations (include these in externals.h)
 int tcount = 0;                     // thread counter - simple wait mechanism for now
-                                    // OK for thread finnishing normally, but won't
-                                    // work if thread dies abnornally
+// OK for thread finnishing normally, but won't
+// work if thread dies abnornally
 std::mutex tlock;                   // general purpose thread lock
-                                    // TODO better thread monitor. All this does at present is
-                                    // increment counter when thread starts, decrement when ends
-                                    // main thread loops until count == 0
+// TODO better thread monitor. All this does at present is
+// increment counter when thread starts, decrement when ends
+// main thread loops until count == 0
 
-bool debug = _DEBUG;
-struct MessageQueue                 // define a queue struct for strings
-{
-    std::queue<std::string> msg_queue;
-    pthread_mutex_t mu_queue;
-    pthread_cond_t cond;
+flags_t flag = {
+                    false,          // daemon
+                    _DEBUG,         //debug
+                    _TEST_MODE,     // test
+                    false,          // connected
+                    false,          // dump
+                    false           // kill
 };
 
+daemon_t admin = {  0,                          // pid
+                    (char *)LOG_FILE_NAME,      // log_file
+                    (char *)PID_FILE_NAME,      // pid_file
+                    (char *)DB_FILE_NAME,       // db_file
+                    NULL                        // logfp
+};
+
+bool debug = flag.debug;              // TODO tidy out references to "debug"
+MessageQueue_t queue;                 // create in instance of a queue
+MessageQueue_t *mq = &queue;          // and a pointer to this queue
+lut_dev_t device[NO_OF_DEVICES];    // database of Lutron devices
+
+jmp_buf JumpBuffer;        // for non-local goto in signal traps
+struct sigaction saCHLD,saHUP;      // two trap handlers. TODO combine
+
+char d_host[]                = LUTRON_HOST;
+const char *host     = d_host;
+char d_tport[]                = LUTRON_PORT;
+const char *tport     = d_tport;
+char d_userid[]             = LUTRON_USER;
+const char *userid     = d_userid;
+char d_password[]            = LUTRON_PASS;
+const char *password     = d_password;
+char d_log_file[]             = LOG_FILE_NAME;
+const char *log_file     = d_log_file;
+char d_db_file[]                       = DB_FILE_NAME;
+const char *db_file    = d_db_file;
+char d_pid_file[]                       = PID_FILE_NAME;
+const char *pid_file    = d_pid_file;
+
+pid_t pid;             // child (telnet) process ID
+
+int not_connected = 1;
+
+int test_mode = _TEST_MODE;
+int port=0;
+static FILE *logfp;
+int lutron;        // file handle for telnet to Lutron
+int dump_db_flag = FALSE;
+int kill_flag = FALSE;     // set true is this is a killer instance
 
 
-MessageQueue queue;                 // create in instance of a queue
-MessageQueue *mq = &queue;          // and a pointer to this queue
-
-//**************  Lutron connection thread
-
-
-char *getString(){     // uses a static index (i) to return
-    // a number of C-strings each time it's called
-    static int i = 0;
-    static const char * strs[] = {  "hello world",
-        "second message",
-        "now added a third",
-        "Last message on queue",
-        "\0"};
-    
-    return((char *)strs[i++]);
-    
-}
-
-int pushq(std::string arg) // pushes string onto queue
-{
-        pthread_mutex_lock(&mq->mu_queue);    // lock the queue via the pointer
-        mq->msg_queue.push(arg);              // push the string onto queue
-        pthread_mutex_unlock(&mq->mu_queue);  // unlock the queue
-        pthread_cond_signal(&mq->cond);       // signal any thread waiting on
-        return(EXIT_SUCCESS);
-}
-
-void pusher()
-{
-    std::string msg;        // C++ string
-    
-    while(1){
-        msg = getString();
-        pushq(msg);
-        if( msg.empty()){
-            break;
-        }
-    }
-    
-}
-
-void* lutron_connection(void *arg){
-    tlock.lock();
-    ++tcount;
-    tlock.unlock();
-    if(debug) printf("lutron thread started\n");
-    pusher();
-    tlock.lock();
-    --tcount;
-    tlock.unlock();
-    return(NULL);
-}
-
-//*************** END Lutron connection thread
-
-//*************** Client connect thread
-
-void* client_listen(void *arg){
-    
-    std::string str;
-    
-    tlock.lock();
-    ++tcount;
-    tlock.unlock();
-    if(debug) printf("client thread started\n");
-    while(1)                              // queue reading (popping) loop
-    {
-        pthread_mutex_lock(&mq->mu_queue);       // lock queue
-        if(!mq->msg_queue.empty())               // if queue not empty
-        {
-            str = mq->msg_queue.front();         // read string at front
-            //  of queue
-            mq->msg_queue.pop();                 // and pop it
-            pthread_mutex_unlock(&mq->mu_queue); // unlock queue
-            pthread_cond_signal(&mq->cond);      // sig any blocked threads
-            if ( str.empty()){                   // if empty string break
-                // loop we're done
-                break; // while
-            }
-            std::cout << tcount << str << "\n";
-        }
-    }//while 1
-    tlock.lock();
-    --tcount;
-    tlock.unlock();
-    return(NULL);
-}
-
-
-//*************** END client connection thread
-
-
+/**********************************************************************
+          MAIN
+ *********************************************************************/
 int main(int argc, const char * argv[]) {
     
+  pthread_t lutron_tid,client_tid;                      // Thread IDs
+  int thread_error;
     
-    pthread_t lutron_tid,client_tid;                      // Thread IDs
-    int thread_error;
+    int i,opt;
+    char *conf_file=NULL;
+    
+    
+    
+    testRoot();    // Exits if not run by root
+    printLerrors();
+    
+    //Parse command line options
+    while ((opt = getopt(argc, (char **)argv, "Dkvdtp:c:")) != -1){
+        switch (opt){
+                
+            case 'D': // run in debug mode. Use as first option to catch all in this
+                // switch block
+                debug=TRUE;
+                printf("Debug mode set\n");
+                break;
+                
+            case 'd': // Run as a daemon
+                if(debug) printf("Running as a Daemon\n");
+                becomeDaemon(  (int)(   BD_NO_CLOSE_FILES |
+                                        BD_NO_CHDIR |
+                                        BD_NO_REOPEN_STD_FDS));
+                break;
+                
+            case 'c': // Alternate config file
+                conf_file=(char *)malloc(sizeof(optarg));
+                strcpy(conf_file,optarg);
+                break;
+                
+            case 'p': // Alternate listening port
+                port = atoi(optarg);
+                break;
+                
+            case 't': // test mode, no Lutron connection
+                test_mode = TRUE;
+                if(debug) printf("test mode\n");
+                break;
+                
+            case 'k': // test mode, no Lutron connection
+                kill_flag = TRUE;
+                if(debug) printf("kill mode\n");
+                break;
+                
+            case 'v': // version
+                printf("%s\n",VERSION);
+                exit(EXIT_SUCCESS);
+                break;
+                
+            default:
+                //usageError(argv[0]);
+                break;
+                
+        }//switch
+    }//while opt parse
+    
+    if(debug)printf("command ops parsed\n");
+    if(debug)printf("logfile: %s\n",admin.log_file);
+
     
     // create the worker threads
     thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
@@ -145,6 +152,9 @@ int main(int argc, const char * argv[]) {
     else
         if(debug) printf("Thread created successfully\n");
     
+    if (testRoot()==EXIT_SUCCESS){
+        if(debug)printf("root tested OK\n");
+    }
     
     bool done = false;
     while( ! done ){

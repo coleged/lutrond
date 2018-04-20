@@ -8,7 +8,9 @@
 #ifndef externals_h
 #define externals_h
 
-extern MessageQueue *mq;
+// globals for linkage across compiled object files
+
+extern MessageQueue_t *mq;   // pointer to the inter-thread message queue
 extern std::mutex tlock;
 extern int tcount;
 extern bool debug;
