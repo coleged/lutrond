@@ -65,7 +65,7 @@ logClose(void)
 }//logClose
 
 //************   pidFile - write my (parent) pid to pid file
-static void
+void
 pidFile(const char *file,char *command_line)
 {
     

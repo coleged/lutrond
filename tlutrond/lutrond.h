@@ -32,10 +32,12 @@
 
 #define MAC_OS10
 
-#ifdef MAC_OS10		// Mac OS doesn't have pty.h
+#ifdef MAC_OS10		// Mac OS doesn't have pty.h and header search path is broken
 #include <util.h>
+#include "/usr/local/include/libconfig.h"
 #else
 #include <pty.h>
+#include <libconfig.h>
 #endif
 
 #include <termios.h>
@@ -49,6 +51,7 @@
                                             // have used brute force for now
 #include <time.h>
 #include <syslog.h>
+#include <libgen.h>    // for basename()
 #include "become_daemon.h"
 #include "tlpi_hdr.h"		// uses some code snarfed from TLPI book
 #undef		min
@@ -83,12 +86,18 @@
 #define LOG_FILE_NAME   "/tmp/lutrond.log"		// *
 #define DB_FILE_NAME	"/tmp/lutrond.db"
 #define PID_FILE_NAME   "/tmp/lutrond.pid"
+
+#ifdef MAC_OS10        // Mac OS high sierra moved telnet
+#define TELNET_PROG     "/usr/local/bin/telnet"
+#else
 #define TELNET_PROG     "/usr/bin/telnet"
+#endif
+
 #define SYSLOG_OPT (LOG_PID | LOG_NDELAY | LOG_NOWAIT)
 #define SYSLOG_FACILITY LOG_LOCAL7
 //#define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
 #define CONFIG_FILE     "/tmp/lutrond.conf"
-#define DEFAULT_PORT    "4534"  // this must be a *char    *+
+#define DEFAULT_PORT    4534
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
 
@@ -100,10 +109,13 @@ typedef struct{
     bool connected;
     bool dump;
     bool kill;
+    bool port;
 }flags_t;
 
 typedef struct{
-    int port;
+            int port;
+            int sockfd;
+            int actsockfd;
     
     
 }client_t;   // client socket
@@ -167,5 +179,5 @@ void* lutron_connection(void *arg);
 char *lerror(int number);
 void printLerrors();
 int readConfFile(char *);
-
+void pidFile(const char *,char *);
 /**********************  END END END ***********************************/

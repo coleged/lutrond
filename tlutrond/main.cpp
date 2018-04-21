@@ -26,7 +26,8 @@ flags_t flag = {
                     _TEST_MODE,     // test
                     false,          // connected
                     false,          // dump
-                    false           // kill
+                    false,          // kill
+                    false           // port
 };
 
 daemon_t admin = {  0,                          // pid
@@ -38,7 +39,7 @@ daemon_t admin = {  0,                          // pid
 };
 
 client_t listener = {
-                    (int){0}       //port
+                    DEFAULT_PORT       //port
 };
 
 lutron_t lutron ={
@@ -129,6 +130,7 @@ int main(int argc, const char *argv[]) {
                 
             case 'p': // Alternate listening port
                 listener.port = atoi(optarg);
+                flag.port=true; // overide default & config file directive
                 break;
                 
             case 't': // test mode, no Lutron connection
@@ -153,8 +155,9 @@ int main(int argc, const char *argv[]) {
         }//switch
     }//while opt parse
     
-    if(debug)printf("command ops parsed\n");
-    if(debug)printf("logfile: %s\n",admin.log_file);
+    if(flag.debug)printf("command ops parsed\n");
+    if(flag.debug)printf("logfile: %s\n",admin.log_file);
+    
     
     if (readConfFile(admin.conf_file)==EXIT_FAILURE){
         fprintf(stderr,"Running without conf file\n");
@@ -163,14 +166,39 @@ int main(int argc, const char *argv[]) {
     logOpen(admin.log_file);
     logMessage("Starting:%s",(char *)argstr(argc,(char **)argv));
     
+    if( flag.kill ){ // send HUP to existing process and exit
+        if(lutkill(admin.pid_file)==EXIT_SUCCESS){
+            if(flag.debug) printf("kill succeded\n");
+            logMessage("[lutrond -k]  succeded\n");
+            exit(EXIT_SUCCESS);
+        }//if
+        // Kill failed
+        logMessage("[lutrond -k] kill -HUP attempt failed\n");
+        exit(EXIT_FAILURE);
+    }// if kill_flag
+    
+    openlog(SYSLOG_IDENT,SYSLOG_OPT,SYSLOG_FACILITY); // SYSLOG open
+    syslog(SYSLOG_OPT,"startup. Also see %s",admin.log_file);
+    
+    pidFile(admin.pid_file,argstr(argc,(char **)argv));
+    
+
+    if(flag.debug){
+        printf("conf_file = %s\n",admin.conf_file);
+        printf("userid = %s\n",lutron.user);
+        printf("log_file = %s\n",admin.log_file);
+        printf("conf_file = %s\n",admin.conf_file);
+    }
+
 
     
     // create the worker threads
     thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
-    if (thread_error != 0)
+    if (thread_error != 0){
         fprintf(stderr,"Can't create Lutron thread :[%s]\n", strerror(thread_error));
-    else
-        if(debug) printf("Thread created successfully\n");
+        exit(EXIT_FAILURE);
+    }
+    if(flag.debug) printf("Thread created successfully\n");
     
     thread_error = pthread_create(&client_tid, NULL, &client_listen, NULL);
     if (thread_error != 0)
@@ -191,7 +219,7 @@ int main(int argc, const char *argv[]) {
     }
     
     std::cout << "Final tcount =" << tcount << "\n";
-    
+    usleep(100000000);
     exit(0);
 }
 

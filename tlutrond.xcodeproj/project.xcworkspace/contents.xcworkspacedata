@@ -2,15 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:/Users/ecole/src/tlutrond/tlutrond/lutron_connect.cpp">
-   </FileRef>
-   <FileRef
-      location = "group:/Users/ecole/src/tlutrond/tlutrond/externals.h">
-   </FileRef>
-   <FileRef
-      location = "group:../../lutrond/lutrond.h">
-   </FileRef>
-   <FileRef
       location = "self:tlutrond.xcodeproj">
    </FileRef>
 </Workspace>

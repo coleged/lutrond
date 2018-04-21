@@ -31,7 +31,7 @@ readConfFile( char *path)    // requires libconfig (libconfig.h & -lconfig)
     
     if(listener.port == 0){
         if(config_lookup_string(&cfg, "listen_port", &sport)){
-            listener.port=atoi(sport);
+            if(!flag.port) listener.port=atoi(sport); // if no -p switch on cmd line
         }//if
     }//if port
     // TODO - see these strange shenanigans via const char *ptr to get

@@ -15,6 +15,7 @@
 		B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDE208A2104004B7CF9 /* conf_file.cpp */; };
 		B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B942FEE3208A4EE1004B7CF9 /* libconfig++.a */; };
 		B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE5208A8957004B7CF9 /* misc_function.cpp */; };
+		B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,6 +49,7 @@
 		B942FEE1208A4E1F004B7CF9 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ..; sourceTree = "<group>"; };
 		B942FEE3208A4EE1004B7CF9 /* libconfig++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libconfig++.a"; path = "lib/libconfig++.a"; sourceTree = "<group>"; };
 		B942FEE5208A8957004B7CF9 /* misc_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = misc_function.cpp; sourceTree = "<group>"; };
+		B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lutkill_f.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +92,7 @@
 				B942FED820894635004B7CF9 /* error_functions.h */,
 				B942FED420894507004B7CF9 /* become_daemon.h */,
 				B942FEDC2089482F004B7CF9 /* lerror.cpp */,
+				B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */,
 				B942FEDA20894811004B7CF9 /* become_daemon.cpp */,
 				B942FED12088D17C004B7CF9 /* externals.h */,
 				B942FEC6208882BE004B7CF9 /* main.cpp */,
@@ -170,6 +173,7 @@
 				B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */,
 				B942FEC7208882BE004B7CF9 /* main.cpp in Sources */,
 				B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */,
+				B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */,
 				B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */,
 				B942FEDD2089482F004B7CF9 /* lerror.cpp in Sources */,
 				B942FECE2088B692004B7CF9 /* client_connect.cpp in Sources */,

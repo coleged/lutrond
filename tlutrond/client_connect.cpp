@@ -38,10 +38,10 @@ testRoot(){
 char *getString(){     // uses a static index (i) to return
     // a number of C-strings each time it's called
     static int i = 0;
-    static const char * strs[] = {  "hello world",
-        "second message",
-        "now added a third",
-        "Last message on queue",
+    static const char * strs[] = {  "#OUTPUT,51,1,100.00",
+        "#OUTPUT,52,1,100.00",
+        "#OUTPUT,102,1,100.00",
+        "#OUTPUT,103,1,100.00",
         "\0"};
     
     return((char *)strs[i++]);
@@ -67,6 +67,7 @@ void pusher()
         if( msg.empty()){
             break;
         }
+        if(flag.debug)printf("pushing %s\n",msg.c_str());
     }
     
 }
@@ -76,7 +77,7 @@ void* client_listen(void *arg){
     tlock.lock();
     ++tcount;
     tlock.unlock();
-    if(debug) printf("lutron thread started\n");
+    if(flag.debug) printf("LISTEN thread started\n");
     pusher();
     tlock.lock();
     --tcount;
