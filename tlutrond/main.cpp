@@ -128,7 +128,7 @@ int main(int argc, const char *argv[]) {
     logOpen(admin.log_file);
     logMessage("Starting:%s",(char *)argstr(argc,(char **)argv));
     
-    if( flag.kill ){ // send HUP to existing process and exit
+    if( flag.kill ){ // send HUP to existing process or respawn
         if(lutkill(admin.pid_file)==EXIT_SUCCESS){
             if(flag.debug) printf("kill succeded\n");
             logMessage("[lutrond -k]  succeded\n");
