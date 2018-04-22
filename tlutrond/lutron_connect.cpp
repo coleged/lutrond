@@ -7,6 +7,7 @@
 
 #include "lutrond.h"
 #include "externals.h"
+#define __SELECT_TIMEOUT 1
 
 char lutron_buff[BUFFERSZ];
 int lutron_buff_sz = sizeof(lutron_buff);
@@ -54,6 +55,7 @@ void* lutron_connection(void *arg){
     fd_set write_fd;
     fd_set except_fd;
     std::string str;
+    struct timeval tv = {__SELECT_TIMEOUT, 0};
     
     //Establish Lutron connection
     if(flag.debug) printf("connecting to Lutron\n");
@@ -107,7 +109,7 @@ void* lutron_connection(void *arg){
                 FD_ZERO(&write_fd);
                 FD_ZERO(&except_fd);
                 FD_SET(lutron.fd, &read_fd);
-                select(lutron.fd+1, &read_fd, &write_fd, &except_fd, NULL);
+                select(lutron.fd+1, &read_fd, &write_fd, &except_fd, &tv);
                 if (FD_ISSET(lutron.fd, &read_fd)){
                     if ((l_bytes=read(lutron.fd, &lutron_buff, lutron_buff_sz)) != -1){
                         if (flag.debug) write(STDOUT_FILENO, &lutron_buff, l_bytes);
@@ -143,10 +145,8 @@ void* lutron_connection(void *arg){
                 //  of queue
                 mq->msg_queue.pop();                 // and pop it
                 // send command to lutron
-                
-                //TODO ******** THIS IS AS FAR AS I'VE GOT SO FAR
-                
-                std::cout << tcount << str << "\n";
+                write(lutron.fd,str.c_str(),strlen(str.c_str()));
+                write(lutron.fd,"\r\n",2);
             }// if !empty()
             pthread_mutex_unlock(&mq->mu_queue); // unlock queue
             pthread_cond_signal(&mq->cond);      // sig any blocked threads
@@ -155,16 +155,17 @@ void* lutron_connection(void *arg){
             FD_ZERO(&except_fd);
             FD_SET(lutron.fd, &read_fd);
             FD_SET(lutron.fd, &read_fd);
-            select(lutron.fd+1, &read_fd, &write_fd, &except_fd, NULL);
+            select(lutron.fd+1, &read_fd, &write_fd, &except_fd, &tv);
             if(FD_ISSET(lutron.fd, &read_fd)){
-                    l_bytes=read(lutron.fd,&lutron_buff,lutron_buff_sz);
-                    //parse_response("L3>>",lutron_buff);
-                    if(debug) printf("L3>> %s\n",lutron_buff);
-                    if(debug) printf("Done reading lutron(3)\n");
+                bzero(lutron_buff,lutron_buff_sz);
+                l_bytes=read(lutron.fd,&lutron_buff,lutron_buff_sz);
+                //parse_response("L3>>",lutron_buff);
+                if(flag.debug) printf("L3>> %s\n",lutron_buff);
+                // if(flag.debug) printf("Done reading lutron(3)\n");
             }//if ISSET lutron
         }//while flag.connected
     }//while TRUE
-
+    printf("lutron thread terminating\n");
     return((void *)EXIT_FAILURE);
     
 }

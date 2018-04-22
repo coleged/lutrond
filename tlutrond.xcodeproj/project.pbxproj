@@ -16,6 +16,7 @@
 		B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B942FEE3208A4EE1004B7CF9 /* libconfig++.a */; };
 		B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE5208A8957004B7CF9 /* misc_function.cpp */; };
 		B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */; };
+		B95D7ECC208C82F200EC8041 /* readline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECB208C82F200EC8041 /* readline.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -50,6 +51,7 @@
 		B942FEE3208A4EE1004B7CF9 /* libconfig++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libconfig++.a"; path = "lib/libconfig++.a"; sourceTree = "<group>"; };
 		B942FEE5208A8957004B7CF9 /* misc_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = misc_function.cpp; sourceTree = "<group>"; };
 		B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lutkill_f.cpp; sourceTree = "<group>"; };
+		B95D7ECB208C82F200EC8041 /* readline.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readline.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +101,7 @@
 				B942FEE5208A8957004B7CF9 /* misc_function.cpp */,
 				B942FEDE208A2104004B7CF9 /* conf_file.cpp */,
 				B942FECD2088B692004B7CF9 /* client_connect.cpp */,
+				B95D7ECB208C82F200EC8041 /* readline.cpp */,
 				B942FED22088D28D004B7CF9 /* lutron_connect.cpp */,
 			);
 			path = tlutrond;
@@ -172,6 +175,7 @@
 				B942FED32088D28D004B7CF9 /* lutron_connect.cpp in Sources */,
 				B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */,
 				B942FEC7208882BE004B7CF9 /* main.cpp in Sources */,
+				B95D7ECC208C82F200EC8041 /* readline.cpp in Sources */,
 				B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */,
 				B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */,
 				B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */,

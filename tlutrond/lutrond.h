@@ -116,6 +116,7 @@ typedef struct{
             int port;
             int sockfd;
             int actsockfd;
+            bool connected;
     
     
 }client_t;   // client socket
