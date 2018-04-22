@@ -172,13 +172,19 @@ char *lerror(int number);       // lerror.c returns pointer to string containing
                                 // description of Lutron error
 void beat_test();
 int lutkill(const char *);
-char *argstr(int count, char **arg_list); // args to string
-char **strarg(char *str);		   // string to args
+char *argstr(int, char **); // args to string
+char **strarg(char *);		   // string to args
 int testRoot();
-void* client_listen(void *arg);
-void* lutron_connection(void *arg);
-char *lerror(int number);
+void* client_listen(void *);
+void* lutron_connection(void *);
+char *lerror(int);
+void error(const char *);
 void printLerrors();
 int readConfFile(char *);
 void pidFile(const char *,char *);
+void parse_response(char *, char *);
+char *db_timestamp();
+void sigchldHandler(int);
+void sighupHandler(int);
+void dump_db();
 /**********************  END END END ***********************************/

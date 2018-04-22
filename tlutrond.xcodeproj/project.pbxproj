@@ -11,12 +11,15 @@
 		B942FECE2088B692004B7CF9 /* client_connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FECD2088B692004B7CF9 /* client_connect.cpp */; };
 		B942FED32088D28D004B7CF9 /* lutron_connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FED22088D28D004B7CF9 /* lutron_connect.cpp */; };
 		B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDA20894811004B7CF9 /* become_daemon.cpp */; };
-		B942FEDD2089482F004B7CF9 /* lerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDC2089482F004B7CF9 /* lerror.cpp */; };
+		B942FEDD2089482F004B7CF9 /* errors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDC2089482F004B7CF9 /* errors.cpp */; };
 		B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEDE208A2104004B7CF9 /* conf_file.cpp */; };
 		B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B942FEE3208A4EE1004B7CF9 /* libconfig++.a */; };
 		B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE5208A8957004B7CF9 /* misc_function.cpp */; };
-		B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */; };
 		B95D7ECC208C82F200EC8041 /* readline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECB208C82F200EC8041 /* readline.cpp */; };
+		B95D7ECE208CAFEA00EC8041 /* parse_response.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */; };
+		B95D7ED0208CB5A800EC8041 /* database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECF208CB5A800EC8041 /* database.cpp */; };
+		B95D7ED2208D14E400EC8041 /* signals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ED1208D14E400EC8041 /* signals.cpp */; };
+		B95D7ED5208D27A800EC8041 /* writen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ED4208D27A800EC8041 /* writen.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,13 +48,17 @@
 		B942FED820894635004B7CF9 /* error_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error_functions.h; sourceTree = "<group>"; };
 		B942FED92089468C004B7CF9 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		B942FEDA20894811004B7CF9 /* become_daemon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = become_daemon.cpp; sourceTree = "<group>"; };
-		B942FEDC2089482F004B7CF9 /* lerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lerror.cpp; sourceTree = "<group>"; };
+		B942FEDC2089482F004B7CF9 /* errors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = errors.cpp; sourceTree = "<group>"; };
 		B942FEDE208A2104004B7CF9 /* conf_file.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = conf_file.cpp; sourceTree = "<group>"; };
 		B942FEE1208A4E1F004B7CF9 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ..; sourceTree = "<group>"; };
 		B942FEE3208A4EE1004B7CF9 /* libconfig++.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libconfig++.a"; path = "lib/libconfig++.a"; sourceTree = "<group>"; };
 		B942FEE5208A8957004B7CF9 /* misc_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = misc_function.cpp; sourceTree = "<group>"; };
-		B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lutkill_f.cpp; sourceTree = "<group>"; };
 		B95D7ECB208C82F200EC8041 /* readline.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readline.cpp; sourceTree = "<group>"; };
+		B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parse_response.cpp; sourceTree = "<group>"; };
+		B95D7ECF208CB5A800EC8041 /* database.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = database.cpp; sourceTree = "<group>"; };
+		B95D7ED1208D14E400EC8041 /* signals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = signals.cpp; sourceTree = "<group>"; };
+		B95D7ED3208D194200EC8041 /* ename.c.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = ename.c.inc; sourceTree = "<group>"; };
+		B95D7ED4208D27A800EC8041 /* writen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = writen.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,20 +94,24 @@
 			isa = PBXGroup;
 			children = (
 				B942FED02088B824004B7CF9 /* lutrond.h */,
+				B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */,
+				B95D7ECF208CB5A800EC8041 /* database.cpp */,
+				B95D7ED1208D14E400EC8041 /* signals.cpp */,
 				B942FED7208945A8004B7CF9 /* get_num.h */,
 				B942FED620894553004B7CF9 /* unp.h */,
 				B942FED520894534004B7CF9 /* tlpi_hdr.h */,
 				B942FED92089468C004B7CF9 /* config.h */,
 				B942FED820894635004B7CF9 /* error_functions.h */,
 				B942FED420894507004B7CF9 /* become_daemon.h */,
-				B942FEDC2089482F004B7CF9 /* lerror.cpp */,
-				B942FEE9208B122D004B7CF9 /* lutkill_f.cpp */,
+				B942FEDC2089482F004B7CF9 /* errors.cpp */,
 				B942FEDA20894811004B7CF9 /* become_daemon.cpp */,
 				B942FED12088D17C004B7CF9 /* externals.h */,
+				B95D7ED3208D194200EC8041 /* ename.c.inc */,
 				B942FEC6208882BE004B7CF9 /* main.cpp */,
 				B942FEE5208A8957004B7CF9 /* misc_function.cpp */,
 				B942FEDE208A2104004B7CF9 /* conf_file.cpp */,
 				B942FECD2088B692004B7CF9 /* client_connect.cpp */,
+				B95D7ED4208D27A800EC8041 /* writen.cpp */,
 				B95D7ECB208C82F200EC8041 /* readline.cpp */,
 				B942FED22088D28D004B7CF9 /* lutron_connect.cpp */,
 			);
@@ -172,14 +183,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B95D7ECE208CAFEA00EC8041 /* parse_response.cpp in Sources */,
 				B942FED32088D28D004B7CF9 /* lutron_connect.cpp in Sources */,
 				B942FEDF208A2104004B7CF9 /* conf_file.cpp in Sources */,
 				B942FEC7208882BE004B7CF9 /* main.cpp in Sources */,
 				B95D7ECC208C82F200EC8041 /* readline.cpp in Sources */,
 				B942FEDB20894811004B7CF9 /* become_daemon.cpp in Sources */,
-				B942FEEA208B122D004B7CF9 /* lutkill_f.cpp in Sources */,
 				B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */,
-				B942FEDD2089482F004B7CF9 /* lerror.cpp in Sources */,
+				B942FEDD2089482F004B7CF9 /* errors.cpp in Sources */,
+				B95D7ED5208D27A800EC8041 /* writen.cpp in Sources */,
+				B95D7ED2208D14E400EC8041 /* signals.cpp in Sources */,
+				B95D7ED0208CB5A800EC8041 /* database.cpp in Sources */,
 				B942FECE2088B692004B7CF9 /* client_connect.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

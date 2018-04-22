@@ -13,41 +13,7 @@ char lutron_buff[BUFFERSZ];
 int lutron_buff_sz = sizeof(lutron_buff);
 int l_bytes;
 
-/**************  TEST Lutron connection thread
 
-void* lutron_connection(void *arg){
-    
-    std::string str;
-    
-    tlock.lock();
-    ++tcount;
-    tlock.unlock();
-    if(debug) printf("client thread started\n");
-    while(1)                              // queue reading (popping) loop
-    {
-        pthread_mutex_lock(&mq->mu_queue);       // lock queue
-        if(!mq->msg_queue.empty())               // if queue not empty
-        {
-            str = mq->msg_queue.front();         // read string at front
-            //  of queue
-            mq->msg_queue.pop();                 // and pop it
-            pthread_mutex_unlock(&mq->mu_queue); // unlock queue
-            pthread_cond_signal(&mq->cond);      // sig any blocked threads
-            if ( str.empty()){                   // if empty string break
-                // loop we're done
-                break; // while
-            }
-            std::cout << tcount << str << "\n";
-        }
-    }//while 1
-    tlock.lock();
-    --tcount;
-    tlock.unlock();
-    return(NULL);
-    
-}
-
-************ END Lutron connection thread  */
 
 void* lutron_connection(void *arg){
     pid_t pid;
@@ -111,6 +77,7 @@ void* lutron_connection(void *arg){
                 FD_SET(lutron.fd, &read_fd);
                 select(lutron.fd+1, &read_fd, &write_fd, &except_fd, &tv);
                 if (FD_ISSET(lutron.fd, &read_fd)){
+                    // TODO: Might be better to use Readline (readline.cpp) here
                     if ((l_bytes=read(lutron.fd, &lutron_buff, lutron_buff_sz)) != -1){
                         if (flag.debug) write(STDOUT_FILENO, &lutron_buff, l_bytes);
                         if (strncmp(lutron_buff,"login: ",7) == 0){
@@ -136,7 +103,7 @@ void* lutron_connection(void *arg){
         }//if (else)  flag.test
         while(flag.connected){
             
-            if(debug) printf("Connected to Lutron\n");
+            if(flag.debug) printf("Connected to Lutron\n");
             
             pthread_mutex_lock(&mq->mu_queue);       // lock queue
             if(!mq->msg_queue.empty())               // if queue not empty
@@ -159,7 +126,7 @@ void* lutron_connection(void *arg){
             if(FD_ISSET(lutron.fd, &read_fd)){
                 bzero(lutron_buff,lutron_buff_sz);
                 l_bytes=read(lutron.fd,&lutron_buff,lutron_buff_sz);
-                //parse_response("L3>>",lutron_buff);
+                parse_response("L3>>",lutron_buff);
                 if(flag.debug) printf("L3>> %s\n",lutron_buff);
                 // if(flag.debug) printf("Done reading lutron(3)\n");
             }//if ISSET lutron

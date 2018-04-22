@@ -15,22 +15,6 @@ struct sockaddr_in serv_addr, act_addr, cli_addr;
 
 int client_connect=0;
 
-//************   testRoot
-int
-testRoot(){
-  /*
-    int user;
-    
-    user=getuid();
-    if(user != 0){
-        fprintf(stderr,"Must be root to run this\n");
-        error("Not root!");
-    }//if
-    return(EXIT_SUCCESS);
-   */
-    return(EXIT_SUCCESS);
-    
-}//testRoot
 
 //*************** Client connect thread
 
@@ -80,20 +64,7 @@ void* client_listen(void *arg){
     fd_set write_fd;
     fd_set except_fd;
     
- /*
-    tlock.lock();
-    ++tcount;
-    tlock.unlock();
-    if(flag.debug) printf("LISTEN thread started\n");
-    pusher();
-    tlock.lock();
-    --tcount;
-    tlock.unlock();
-    return(NULL);
-   */
-    
-  
-    
+ 
     // Establish Listening socket
     if(flag.debug) logMessage("Port number %i",listener.port);
     listener.sockfd = socket(AF_INET, SOCK_STREAM, 0); // create socket
@@ -165,12 +136,14 @@ void* client_listen(void *arg){
                 if(select(listener.actsockfd+1, &read_fd, &write_fd, &except_fd, NULL)>0){
                     if (FD_ISSET(listener.actsockfd, &read_fd)){
                         // we process all that the client has to say
-                        if(debug)printf("input from client\n");
+                        if(flag.debug)printf("input from client\n");
                         bzero(&soc_buffer,BUFFERSZ);
                         while((bytes_in = Readline(listener.actsockfd,
                                                    soc_buffer,BUFFERSZ)) > 0 ){
-                            // if(debug) printf("line read %s\n",soc_buffer);
+                            // if(flag.debug) printf("line read %s\n",soc_buffer);
                             write(listener.actsockfd,"thanks\n",7); // client waits for ack
+                            // do we need to do this. Lutron echos the command and it gets
+                            // parsed then
                             //parse_response("C1<<",soc_buffer);
                             if(flag.debug || flag.test) printf("%sreceived\n",soc_buffer);
                             if(!flag.test){
@@ -183,10 +156,10 @@ void* client_listen(void *arg){
                              }else{ //test mode
                                 
                              }// else test mode
-                             if(debug) printf("C1<< %s\n",soc_buffer);
+                             if(flag.debug) printf("C1<< %s\n",soc_buffer);
                              //parse_response("C1<<",soc_buffer);
                            } // while read
-                           if(debug) printf("Done reading client\n");
+                           if(flag.debug) printf("Done reading client\n");
                            close(listener.actsockfd);
                            listener.connected=false;
                         }//if FD_SET
