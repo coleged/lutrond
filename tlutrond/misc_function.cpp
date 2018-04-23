@@ -154,7 +154,7 @@ char **strarg(char *str){ // takes a string of whitespace separated tokens
     // and breaks out tokens into an array of pointers
     // to strings will last element a NULL pointer
     
-    int len = strlen(str);
+    int len = (int)strlen(str);
     char *line;   // pointer to working buffer for strtok
     int n = 0;
     

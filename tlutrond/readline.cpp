@@ -17,7 +17,7 @@ my_read(int fd, char *ptr)
     
     if (read_cnt <= 0) {
     again:
-        if ( (read_cnt = read(fd, read_buf, sizeof(read_buf))) < 0) {
+        if ( (read_cnt = (int)read(fd, read_buf, (int)sizeof(read_buf))) < 0) {
             if (errno == EINTR)
                 goto again;
             return(-1);

@@ -138,7 +138,7 @@ void* client_listen(void *arg){
                         // we process all that the client has to say
                         if(flag.debug)printf("input from client\n");
                         bzero(&soc_buffer,BUFFERSZ);
-                        while((bytes_in = Readline(listener.actsockfd,
+                        while((bytes_in = (int)Readline(listener.actsockfd,
                                                    soc_buffer,BUFFERSZ)) > 0 ){
                             // if(flag.debug) printf("line read %s\n",soc_buffer);
                             write(listener.actsockfd,"thanks\n",7); // client waits for ack

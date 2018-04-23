@@ -19,5 +19,7 @@ extern client_t listener;
 extern lutron_t lutron;
 extern daemon_t admin;
 extern flags_t flag;
+extern pid_t telnet_pid;
+extern pthread_t lutron_tid,client_tid,lutron_tid2;                      // Thread IDs
 
 #endif /* externals_h */

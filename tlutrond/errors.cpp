@@ -112,7 +112,6 @@ err_dump(const char *fmt, ...)
     err_doit(1, LOG_ERR, fmt, ap);
     va_end(ap);
     abort();        /* dump core and terminate */
-    exit(1);        /* shouldn't get here */
 }
 
 /* Nonfatal error unrelated to system call
@@ -257,7 +256,8 @@ errExit(const char *format, ...)
     outputError(TRUE, errno, TRUE, format, argList);
     va_end(argList);
     
-    terminate(TRUE);
+    terminate(true);
+   
 }
 
 /* Display error message including 'errno' diagnostic, and

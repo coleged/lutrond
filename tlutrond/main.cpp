@@ -53,17 +53,20 @@ lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
 jmp_buf JumpBuffer;                     // for non-local goto in signal traps
 struct sigaction saCHLD,saHUP;          // two trap handlers. TODO combine
+pid_t telnet_pid;
 
+  pthread_t lutron_tid,client_tid,lutron_tid2;                      // Thread IDs
 
 /**********************************************************************
           MAIN
  *********************************************************************/
 int main(int argc, const char *argv[]) {
     
-  pthread_t lutron_tid,client_tid;                      // Thread IDs
+
   int thread_error;
+    // int status;
     
-    int opt;
+    int i,opt;
 
     testRoot();    // Exits if not run by root
     printLerrors();
@@ -143,7 +146,6 @@ int main(int argc, const char *argv[]) {
     syslog(SYSLOG_OPT,"startup. Also see %s",admin.log_file);
     
     pidFile(admin.pid_file,argstr(argc,(char **)argv));
-    
 
     if(flag.debug){
         printf("conf_file = %s\n",admin.conf_file);
@@ -151,7 +153,8 @@ int main(int argc, const char *argv[]) {
         printf("log_file = %s\n",admin.log_file);
         printf("conf_file = %s\n",admin.conf_file);
     }
-    
+   
+   
     //  Install SIGCHLD handler
     sigemptyset(&saCHLD.sa_mask);
     saCHLD.sa_flags = SA_RESTART ;
@@ -160,6 +163,7 @@ int main(int argc, const char *argv[]) {
         error("Error loading SIGCHLD signal handler");
     }//if
     
+    
     //  Install SIGHUP handler
     sigemptyset(&saHUP.sa_mask);
     saHUP.sa_flags = SA_RESTART ;
@@ -167,33 +171,53 @@ int main(int argc, const char *argv[]) {
     if (sigaction(SIGHUP, &saHUP, NULL) == -1){
         error("Error loading HUP signal handler");
     }//if
+   
 
     // create the worker threads
     thread_error = pthread_create(&client_tid, NULL, &client_listen, NULL);
     if (thread_error != 0)
         fprintf(stderr,"Can't create Client listen thread :[%s]\n", strerror(thread_error));
     else
-        if(flag.debug) printf("Thread created successfully\n");
+        if(flag.debug) printf("main1:Thread created successfully\n");
     
-    flag.dump = false;
-    sigsetjmp(JumpBuffer,1);
-    if(flag.dump){
-        dump_db();
-        flag.dump=false;
-    }// if
+    
+    
+    
     
     thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
     if (thread_error != 0){
         fprintf(stderr,"Can't create Lutron thread :[%s]\n", strerror(thread_error));
         exit(EXIT_FAILURE);
     }
-    if(flag.debug) printf("Thread created successfully\n");
+    if(flag.debug) printf("Main1:Thread created successfully\n");
     
-    
-    
-    
-    
-    usleep(100000000);
-    exit(0);
+    i=0;
+    while(true){
+        usleep(10000000);
+        if(flag.debug)printf("[%i]main:ping\n",i);
+        ++i;
+        if( i > 500 ){ // kill telnet every 500 loops
+            flag.dump=true;
+            if (getpgid(telnet_pid) >= 0){ // crafty way to see if process exists
+                kill(telnet_pid,SIGHUP);
+                if(flag.debug) printf("main1:SIGHUP sent to telnet\n");
+            }else{ // re-thread telnet
+                if(flag.debug) printf("main1:telnet not running\n");
+                pthread_kill(lutron_tid2,SIGHUP);
+                /* Shouldn't rethread lutron_connection - as existing thread is joined to
+                        lutron_tid2, so will rethread when lutron_tid2 dies.
+                thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
+                if (thread_error != 0){
+                    fprintf(stderr,"main2:Can't create Lutron thread :[%s]\n", strerror(thread_error));
+                    exit(EXIT_FAILURE);
+                }*/
+                
+                if(flag.debug) printf("main2:Thread killed successfully\n");
+            }
+            i=0;
+            flag.connected=false;
+        }//if (i > 50)
+    }//while true
+   // NEVER REACHED
 }
 

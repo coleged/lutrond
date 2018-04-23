@@ -46,7 +46,7 @@ becomeDaemon(int flags)
         chdir("/");                     /* Change to root directory */
 
     if (!(flags & BD_NO_CLOSE_FILES)) { /* Close all open files */
-        maxfd = sysconf(_SC_OPEN_MAX);
+        maxfd = (int)sysconf(_SC_OPEN_MAX);
         if (maxfd == -1)                /* Limit is indeterminate... */
             maxfd = BD_MAX_CLOSE;       /* so take a guess */
 

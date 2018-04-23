@@ -59,7 +59,7 @@
 #include "unp.h"		// uses some code snarfed from the UNP book
 
 #ifndef _DEBUG
-#define _DEBUG true		// dont change this - pass it via -D_DEBUG=1 at compile
+#define _DEBUG false		// dont change this - pass it via -D_DEBUG=1 at compile
 #endif
 #ifndef _TEST_MODE		// dont change this - pass it via -D_TEST_MODE=1 at compile
 #define _TEST_MODE false		// TEST_MODE = No Lutron connection

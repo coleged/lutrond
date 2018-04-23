@@ -12,7 +12,6 @@
 
 #define CMD_LINE_LEN 256
 
-#define HUP 1
 
 
 
@@ -26,10 +25,8 @@ sigchldHandler(int sig)
     if(flag.debug) printf("SIGCHLD trapped (handler)\n"); // UNSAFE
     logMessage("SIGCHLD received");
     while( waitpid(-1,&status, WNOHANG) > 0){}; // waits for child to die
-    close(lutron.fd);
+    flag.connected = false; // force parent thread to exit.
     
-    // TODO
-    //siglongjmp(JumpBuffer,1); //  go to re-fork another Lutron connection
     
 }//sigchldHandler
 
@@ -38,22 +35,24 @@ void
 sighupHandler(int sig)
 {
     
+    // this isn't working as I believe xcode is catching SIGHUP for me ;-)
+    
     // all we do here is kill child and then let the SIGCHLD handler do the
     // rest when it catches this.
     
     if(flag.debug) printf("SIGHUP trapped (handler)\n"); // UNSAFE
     logMessage("SIGHUP received");
-    flag.dump=TRUE; // cause db to be dumped when SIGCHLD longjumps
-    // kill(pid,SIGKILL); // TODO Kill lutron thread
-    // never gets here as the SIGKILL is trapped and long jumped back into
-    // main()
+    flag.dump=true; // cause db to be dumped
+    
+    
+    
     
     
 }//sighupHandler
 
 
 
-int lutkill(const char *pid_filename) {
+int lutkill(const char *pid_filename) {  // -k routine
     
     static FILE *pidfp;
     int pid;

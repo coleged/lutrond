@@ -29,7 +29,7 @@ dump_db(){
     }
     
     for(i=1;i<NO_OF_DEVICES;i++){
-        if ((device[i].type != 0) && (device[i].state != NULL)){
+        if ((device[i].type != 0)){
             fprintf(dbfp,"device_%i = {\n",i);
             fprintf(dbfp,"\ttype = %i;\n",device[i].type);
             fprintf(dbfp,"\tlocation = \"%s\";\n",device[i].location);
