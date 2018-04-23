@@ -44,6 +44,8 @@ usageError(const char *prog)
     fprintf(stderr," -D\t\t\tdebug mode\n");
     fprintf(stderr," -t\t\t\ttest mode - do not connect to Lutron\n");
     fprintf(stderr," -v\t\t\tprints version and exits\n");
+    fprintf(stderr," -k\t\t\tsends SIGHUP to Lutron telnet session forcing\n");
+    fprintf(stderr," \t\t\t\tnew session\n");
     exit(EXIT_FAILURE);
 }//usageError
 

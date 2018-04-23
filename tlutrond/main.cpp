@@ -196,6 +196,7 @@ int main(int argc, const char *argv[]) {
         usleep(10000000);
         if(flag.debug)printf("[%i]main:ping\n",i);
         ++i;
+        if( i%10 == 0 ) keepAlive(); // tickle the queue every 10 loops
         if( i > 500 ){ // kill telnet every 500 loops
             flag.dump=true;
             if (getpgid(telnet_pid) >= 0){ // crafty way to see if process exists

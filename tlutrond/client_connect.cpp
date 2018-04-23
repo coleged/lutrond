@@ -21,12 +21,12 @@ int client_connect=0;
 char *getString(){     // uses a static index (i) to return
     // a number of C-strings each time it's called
     static int i = 0;
-    static const char * strs[] = {  "#OUTPUT,51,1,0.00",
-        "#OUTPUT,52,1,0.00",
-        "#OUTPUT,51,1,100.00",
-        "#OUTPUT,52,1,100.00",
+    static const char * strs[] = {  "?OUTPUT,51",
+        "?OUTPUT,52",
+        "?OUTPUT,51",
+        "?OUTPUT,52",
         "\0"};
-    
+    if (i ==  4) i = 0; // reset i
     return((char *)strs[i++]);
     
 }
@@ -41,18 +41,12 @@ int pushq(std::string arg) // pushes string onto queue
     return(EXIT_SUCCESS);
 }
 
-void pusher()
+void keepAlive()
 {
-    std::string msg;        // C++ string
+
     
-    while(1){
-        msg = getString();
-        pushq(msg);
-        if( msg.empty()){
-            break;
-        }
-        //if(flag.debug)printf("pushing %s\n",msg.c_str());
-    }
+        pushq(getString());
+    
     
 }
 

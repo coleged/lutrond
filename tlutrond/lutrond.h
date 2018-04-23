@@ -66,7 +66,7 @@
 #endif				// can also be set at runtime with -t option
 
 #define MY_NAME "lutrond"
-#define VERSION "3.0.0"
+#define VERSION "4.0.0"
 
 #define TRUE	1
 #define FALSE	0
@@ -87,7 +87,7 @@
 #define DB_FILE_NAME	"/tmp/lutrond.db"
 #define PID_FILE_NAME   "/tmp/lutrond.pid"
 
-#ifdef MAC_OS10        // Mac OS high sierra moved telnet
+#ifdef MAC_OS10        // Mac OS high sierra (re)moved telnet
 #define TELNET_PROG     "/usr/local/bin/telnet"
 #else
 #define TELNET_PROG     "/usr/bin/telnet"
@@ -187,4 +187,5 @@ char *db_timestamp();
 void sigchldHandler(int);
 void sighupHandler(int);
 void dump_db();
+void keepAlive();
 /**********************  END END END ***********************************/
