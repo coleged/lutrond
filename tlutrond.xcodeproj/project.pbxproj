@@ -59,6 +59,7 @@
 		B95D7ED1208D14E400EC8041 /* signals.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = signals.cpp; sourceTree = "<group>"; };
 		B95D7ED3208D194200EC8041 /* ename.c.inc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.pascal; path = ename.c.inc; sourceTree = "<group>"; };
 		B95D7ED4208D27A800EC8041 /* writen.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = writen.cpp; sourceTree = "<group>"; };
+		B992DD21208F9C830062D7FF /* build.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = build.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +94,7 @@
 		B942FEC5208882BE004B7CF9 /* tlutrond */ = {
 			isa = PBXGroup;
 			children = (
+				B992DD21208F9C830062D7FF /* build.h */,
 				B942FED02088B824004B7CF9 /* lutrond.h */,
 				B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */,
 				B95D7ECF208CB5A800EC8041 /* database.cpp */,

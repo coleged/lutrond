@@ -90,7 +90,10 @@ int main(int argc, const char *argv[]) {
   int thread_error;
   int i,opt;
 
+    
+#ifdef _ROOT_PRIV
     testRoot();         // Exit if not run by root
+#endif
     // printLerrors();  // TODO reminder to parse lutron ~ERROR messages
     
     //Parse command line options

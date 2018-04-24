@@ -17,6 +17,10 @@
 lutrond V4.0 April 2018
 
 ***********/
+
+#include "build.h"
+
+
 #include <iostream>
 #include <queue>
 #include <cstdlib>
@@ -32,8 +36,6 @@ lutrond V4.0 April 2018
 #include <sys/socket.h>
 #include <setjmp.h>	// for non local goto in signal trap
 
-#define MAC_OS10
-
 #ifdef MAC_OS10		// Mac OS doesn't have pty.h and header search path is broken
 #include <util.h>
 #include "/usr/local/include/libconfig.h"
@@ -47,10 +49,13 @@ lutrond V4.0 April 2018
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
-#include "/usr/local/include/libconfig.h"   // only way I could get Xcode to find this
-                                            // I've wasted way too much time trying to find
-                                            // include and lib path flags in xcode for now, so
-                                            // have used brute force for now
+
+#ifdef MAC_OS10
+#include "/usr/local/include/libconfig.h"
+#else
+#include <libconfig.h>
+#endif
+
 #include <time.h>
 #include <syslog.h>
 #include <libgen.h>    // for basename()

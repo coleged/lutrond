@@ -24,9 +24,8 @@
 #include "externals.h"
 
 //************   testRoot
-int
-testRoot(){
-    /*
+int testRoot(){
+    
      int user;
      
      user=getuid();
@@ -34,8 +33,7 @@ testRoot(){
      fprintf(stderr,"Must be root to run this\n");
      error("Not root!");
      }//if
-     return(EXIT_SUCCESS);
-     */
+    
     return(EXIT_SUCCESS);
     
 }//testRoot

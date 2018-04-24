@@ -10,13 +10,10 @@
 #                                                                         *
 #*************************************************************************/
 TARGET = lutrond
-LIBS =  -lconfig
+LIBS =  -lconfig  -lutil 
 CC = g++
-CFLAGS = -std=c++11
-# DFLAGS for development build
-DFLAGS = -D_DEBUG=true
-# DFLAGS for production build
-#DFLAGS = -D_ROOT_PRIV
+CFLAGS = -std=c++11 -pthread -lconfig
+# DFLAGS are set in build.h
 
 .PHONY: default all clean install
 
@@ -32,7 +29,7 @@ HEADERS = $(wildcard *.h)
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): Makefile $(OBJECTS) $(HEADERS)
-	$(CC) $(CFLAGS) $(DFLAGS) $(OBJECTS) \
+	$(CC) $(CFLAGS) $(OBJECTS) \
 		$(LIBS) -o $(TARGET)
 
 clean:
