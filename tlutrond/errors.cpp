@@ -1,10 +1,29 @@
-/********
+/*************************************************************************\
+ *                  Copyright (C) Ed Cole 2018.                            *
+ *                       colege@gmail.com                                  *
+ *                                                                         *
+ * This program is free software. You may use, modify, and redistribute it *
+ * under the terms of the GNU General Public License as published by the   *
+ * Free Software Foundation, either version 3 or (at your option) any      *
+ * later version. This program is distributed without any warranty.  See   *
+ * the file COPYING.gpl-v3 for details.                                    *
+ *                                                                         *
+ \*************************************************************************/
 
-errors.cpp
+/**********
+ 
+ errors.cpp
+ 
+ lutrond V4.0 April 2018
  
  TODO:  Large parts of this are not used. This is legacy code picked up in the
- evolution of this project and need to to be weeded out.
-
+ evolution of this and other projects and need to to be weeded out.
+ 
+ cmdLineErr() errExit() errExitEN() errMsg() err_doit() err_dump()
+ err_exit() err_msg() err_quit() err_ret() err_sys() error()
+ fatal() lerror() outputError() printLerrors() terminate()
+ usageErr() usageError()
+ 
 ********/
 #include "lutrond.h"
 #include "externals.h"
@@ -52,7 +71,7 @@ usageError(const char *prog)
     exit(EXIT_FAILURE);
 }//usageError
 
-
+//************   lerror
 char *lerror(int number){
 
 static const char *msg[] = {
@@ -70,6 +89,8 @@ return((char *)msg[number]);
 
 } // lerror
 
+
+//************   printLerrors
 void printLerrors(){
     int i;
     // TODO left here to remind me that we need to parse Lutron error messages
@@ -80,6 +101,7 @@ void printLerrors(){
     }// if debug
 }
 
+//************   err_ret
 void
 err_ret(const char *fmt, ...)
 {
@@ -94,6 +116,7 @@ err_ret(const char *fmt, ...)
 /* Fatal error related to system call
  * Print message and terminate */
 
+//************   err_sys
 void
 err_sys(const char *fmt, ...)
 {
@@ -108,6 +131,7 @@ err_sys(const char *fmt, ...)
 /* Fatal error related to system call
  * Print message, dump core, and terminate */
 
+//************   err_dump
 void
 err_dump(const char *fmt, ...)
 {
@@ -122,6 +146,7 @@ err_dump(const char *fmt, ...)
 /* Nonfatal error unrelated to system call
  * Print message and return */
 
+//************   err_msg
 void
 err_msg(const char *fmt, ...)
 {
@@ -136,6 +161,7 @@ err_msg(const char *fmt, ...)
 /* Fatal error unrelated to system call
  * Print message and terminate */
 
+//************   err_quit
 void
 err_quit(const char *fmt, ...)
 {
@@ -150,6 +176,7 @@ err_quit(const char *fmt, ...)
 /* Print message and return to caller
  * Caller specifies "errnoflag" and "level" */
 
+//************   err_doit
 static void
 err_doit(int errnoflag, int level, const char *fmt, va_list ap)
 {
@@ -177,6 +204,7 @@ err_doit(int errnoflag, int level, const char *fmt, va_list ap)
     return;
 }
 
+//************   terminate
 static void
 terminate(bool useExit3)
 {
@@ -205,7 +233,8 @@ terminate(bool useExit3)
  * outputting the caller-supplied error message specified in
  'format' and 'ap'. */
 
-//****  COMMENTED OUT DUE TO C++ COMPILER ERRORS FAILING TO BUILD
+
+//************   outputError
 void
 outputError(bool useErr, int err, bool flushStdout,
             const char *format, va_list ap)
@@ -232,6 +261,7 @@ outputError(bool useErr, int err, bool flushStdout,
 
 // Display error message including 'errno' diagnostic, and return to caller
 
+//************   errMsg
 void
 errMsg(const char *format, ...)
 {
@@ -252,6 +282,7 @@ errMsg(const char *format, ...)
 /* Display error message including 'errno' diagnostic, and
  terminate the process */
 
+//************   errExit
 void
 errExit(const char *format, ...)
 {
@@ -282,6 +313,7 @@ errExit(const char *format, ...)
  stdio buffers that were partially filled by the caller and without
  invoking exit handlers that were established by the caller. */
 
+//************   err_exit
 void
 err_exit(const char *format, ...)
 {
@@ -299,6 +331,7 @@ err_exit(const char *format, ...)
 /* The following function does the same as errExit(), but expects
  the error number in 'errnum' */
 
+//************   errExitEN
 void
 errExitEN(int errnum, const char *format, ...)
 {
@@ -315,6 +348,7 @@ errExitEN(int errnum, const char *format, ...)
 
 /* Print an error message (without an 'errno' diagnostic) */
 
+//************   fatal
 void
 fatal(const char *format, ...)
 {
@@ -331,6 +365,7 @@ fatal(const char *format, ...)
 
 /* Print a command usage error message and terminate the process */
 
+//************   usageErr
 void
 usageErr(const char *format, ...)
 {
@@ -350,6 +385,7 @@ usageErr(const char *format, ...)
 /* Diagnose an error in command-line arguments and
  terminate the process */
 
+//************   cmdLineErr
 void
 cmdLineErr(const char *format, ...)
 {

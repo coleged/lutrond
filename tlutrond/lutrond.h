@@ -12,7 +12,9 @@
 
 /**********
  
-  lutrond.h	
+  lutrond.h
+ 
+lutrond V4.0 April 2018
 
 ***********/
 #include <iostream>

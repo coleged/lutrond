@@ -1,3 +1,33 @@
+/*************************************************************************\
+ *                  Copyright (C) Ed Cole 2018.                            *
+ *                       colege@gmail.com                                  *
+ *                                                                         *
+ * This program is free software. You may use, modify, and redistribute it *
+ * under the terms of the GNU General Public License as published by the   *
+ * Free Software Foundation, either version 3 or (at your option) any      *
+ * later version. This program is distributed without any warranty.  See   *
+ * the file COPYING.gpl-v3 for details.                                    *
+ *                                                                         *
+ \*************************************************************************/
+
+/**********
+ 
+ unp.h
+ 
+ lutrond V4.0 April 2018
+ 
+ ***********/
+
+/*************************************************************************\
+ *                  Copyright (C) Michael Kerrisk, 2016.                   *
+ *                                                                         *
+ * This program is free software. You may use, modify, and redistribute it *
+ * under the terms of the GNU Lesser General Public License as published   *
+ * by the Free Software Foundation, either version 3 or (at your option)   *
+ * any later version. This program is distributed without any warranty.    *
+ * See the files COPYING.lgpl-v3 and COPYING.gpl-v3 for details.           *
+ \*************************************************************************/
+
 /* include unph */
 /* Our own header.  Tabs are set for 4 spaces, not 8 */
 

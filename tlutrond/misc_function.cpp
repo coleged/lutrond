@@ -1,10 +1,24 @@
-//
-//  misc_function.cpp
-//  tlutrond
-//
-//  Created by Ed Cole on 20/04/2018.
-//  Copyright © 2018 Ed Cole. All rights reserved.
-//
+/*************************************************************************\
+ *                  Copyright (C) Ed Cole 2018.                            *
+ *                       colege@gmail.com                                  *
+ *                                                                         *
+ * This program is free software. You may use, modify, and redistribute it *
+ * under the terms of the GNU General Public License as published by the   *
+ * Free Software Foundation, either version 3 or (at your option) any      *
+ * later version. This program is distributed without any warranty.  See   *
+ * the file COPYING.gpl-v3 for details.                                    *
+ *                                                                         *
+ \*************************************************************************/
+
+/**********
+ 
+ misc_function.cpp
+ 
+ lutrond V4.0 April 2018
+ 
+ argstr() logClose() logMessage() logOpen() pidFile() strarg() testRoot()
+ 
+ ***********/
 
 #include "lutrond.h"
 #include "externals.h"
@@ -107,6 +121,7 @@ pidFile(const char *file,char *command_line)
     
 }//pidFile
 
+//************   argstr
 char *argstr(int count, char **arg_list) {
     // takes count and *arg_list[] and returns argv_list[] as single string with
     // each array element as space separated word in string
