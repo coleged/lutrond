@@ -18,8 +18,10 @@ int client_connect=0;
 
 //*************** Client connect thread
 
+//*****************getString()
 char *getString(){     // uses a static index (i) to return
     // a number of C-strings each time it's called
+    // used by keepAlive
     static int i = 0;
     static const char * strs[] = {  "?OUTPUT,51",
         "?OUTPUT,52",
@@ -28,9 +30,10 @@ char *getString(){     // uses a static index (i) to return
         "\0"};
     if (i ==  4) i = 0; // reset i
     return((char *)strs[i++]);
-    
 }
+//END*****************getString()
 
+//*****************pushq()
 int pushq(std::string arg) // pushes string onto queue
 {
     if(flag.debug)printf("pushing %s\n",arg.c_str());
@@ -40,16 +43,16 @@ int pushq(std::string arg) // pushes string onto queue
     pthread_cond_signal(&mq->cond);       // signal any thread waiting on
     return(EXIT_SUCCESS);
 }
+//END*****************pushq()
 
+//*****************keepAlive()
 void keepAlive()
 {
-
-    
         pushq(getString());
-    
-    
 }
+//END*****************keepAlive()
 
+//*****************client_listen()      thread head
 void* client_listen(void *arg){
     
     int optval=1;
@@ -57,23 +60,25 @@ void* client_listen(void *arg){
     fd_set read_fd;
     fd_set write_fd;
     fd_set except_fd;
-    
- 
+
+  while(true){ // main loop
     // Establish Listening socket
     if(flag.debug) logMessage("Port number %i",listener.port);
     listener.sockfd = socket(AF_INET, SOCK_STREAM, 0); // create socket
-    fcntl(listener.sockfd, F_SETFD, FD_CLOEXEC);
+    fcntl(listener.sockfd, F_SETFD, FD_CLOEXEC);       // set some socket options
     if (listener.sockfd < 0){
-        //error("ERROR opening socket");
+        logMessage("Can't open listening socket");
         if(flag.debug)fprintf(stderr,"cant open listening socket\n");
+        error("ERROR opening socket");
     }
     if (setsockopt(listener.sockfd,
                    SOL_SOCKET,
                    SO_REUSEADDR,
                    &optval,             // {=1}
                    sizeof(int)) < 0){
-        //error("setsockopt(SO_REUSEADDR) failed");
+        logMessage("Can't SO_REUSEADDR socket");
         if(flag.debug)fprintf(stderr,"cant SO_REUSEADDR socket\n");
+        error("setsockopt(SO_REUSEADDR) failed");
     }//if setsocketopt
     socklen = sizeof(serv_addr);
     bzero((char *) &serv_addr, socklen);
@@ -85,26 +90,27 @@ void* client_listen(void *arg){
         printf("bind socket(FD = %i)\n",listener.sockfd);
     }// if debug
     if (bind(listener.sockfd,(struct sockaddr *) &serv_addr, socklen) < 0) {
-        //error("ERROR on binding");
         if(flag.debug)fprintf(stderr,"binding error\n");
+        error("ERROR on binding");
     }//if
     if(flag.debug) logMessage("listen");
     listen(listener.sockfd,SOC_BL_QUEUE);
 
-    while(true){
-        if (!flag.test){  // probably not needed as we always want listener loop
+    while(true){ // bind loop
+        if (!flag.test){ // TODO: no-Lutron connect test mode not implimented
             FD_ZERO(&read_fd);
             FD_ZERO(&write_fd);
             FD_ZERO(&except_fd);
             FD_SET(listener.sockfd, &read_fd);
-            select(listener.sockfd+1, &read_fd, &write_fd, &except_fd, NULL);
+            select(listener.sockfd+1, &read_fd, &write_fd, &except_fd, NULL); // Blocks
             if(FD_ISSET(listener.sockfd, &read_fd)){ // client connect attempt
                 listener.actsockfd = accept(listener.sockfd,
                                             (struct sockaddr *) &act_addr,&socklen);
                 if (listener.actsockfd < 0){
-                    // ISSUE. A failed client accept crashes the server
-                    // error("ERROR on accept");
-                    printf("failed to accept connection\n");
+                    logMessage("failed accept on socket");
+                    fprintf(stderr,"failed to accept connection\n");
+                    close(listener.sockfd);
+                    break; // bind loop, go re-establish listening socket
                 }else{
                     listener.connected = true;
                     if(flag.debug) printf("Accept connection (active socket FD= %i)\n",
@@ -163,8 +169,8 @@ void* client_listen(void *arg){
         }else{// flag.test==true
             // not sure there is any case here
         }// if/else flag.test
-    }// while true
- 
+    }// while true (bind loop}
+  }// while true (main loop)
 
 }// client_listen()
 

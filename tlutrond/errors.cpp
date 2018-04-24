@@ -12,11 +12,14 @@ errors.cpp
 #include <stdarg.h>
 #include "error_functions.h"
 #include "tlpi_hdr.h"
-#include "ename.c.inc"          /* Defines ename and MAX_ENAME */
+#include "ename.c.inc"                /* Defines ename and MAX_ENAME */
 
-#ifdef __GNUC__                 /* Prevent 'gcc -Wall' complaining  */
-__attribute__ ((__noreturn__))  /* if we call this function as last */
-#endif                          /* statement in a non-void function */
+// This throws warnings as C++ in xcode
+//#ifdef __GNUC__                       /* Prevent 'gcc -Wall' complaining  */
+//__attribute__  ((__noreturn__))   /* if we call this function as last */
+//#endif                                /* statement in a non-void function */
+
+#define NORETURN __attribute__ ((__noreturn__))
 
 int        daemon_proc;        /* set nonzero by daemon_init() */
 
@@ -215,7 +218,7 @@ outputError(bool useErr, int err, bool flushStdout,
     if (useErr)
         snprintf(errText, BUF_SIZE, " [%s %s]",
                  (err > 0 && err <= MAX_ENAME) ?
-                 ename[err] : "?UNKNOWN?", strerror(err));
+                 ename[err].c_str() : "?UNKNOWN?", strerror(err));
     else
         snprintf(errText, BUF_SIZE, ":");
     
@@ -260,6 +263,8 @@ errExit(const char *format, ...)
     
     terminate(true);
    
+    exit(EXIT_FAILURE); // never run as terminate() exists, but stops compileer warnings
+    
 }
 
 /* Display error message including 'errno' diagnostic, and
@@ -287,6 +292,8 @@ err_exit(const char *format, ...)
     va_end(argList);
     
     terminate(FALSE);
+    
+    exit(EXIT_FAILURE); // never run as terminate() exists, but stops compileer warnings
 }
 
 /* The following function does the same as errExit(), but expects
@@ -302,6 +309,8 @@ errExitEN(int errnum, const char *format, ...)
     va_end(argList);
     
     terminate(TRUE);
+    
+    exit(EXIT_FAILURE); // never run as terminate() exists, but stops compileer warnings
 }
 
 /* Print an error message (without an 'errno' diagnostic) */
@@ -316,6 +325,8 @@ fatal(const char *format, ...)
     va_end(argList);
     
     terminate(TRUE);
+    
+    exit(EXIT_FAILURE); // never run as terminate() exists, but stops compileer warnings
 }
 
 /* Print a command usage error message and terminate the process */

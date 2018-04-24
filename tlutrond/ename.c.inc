@@ -2,7 +2,10 @@
 
    Built on GNU/Linux x86_64 with glibc 2.25
 */
-static char *ename[] = {
+#define MAX_ENAME 134
+
+std::string ename[MAX_ENAME] =
+    {
     /*   0 */ "", 
     /*   1 */ "EPERM", "ENOENT", "ESRCH", "EINTR", "EIO", "ENXIO", 
     /*   7 */ "E2BIG", "ENOEXEC", "EBADF", "ECHILD", 
@@ -34,6 +37,7 @@ static char *ename[] = {
     /* 123 */ "ENOMEDIUM", "EMEDIUMTYPE", "ECANCELED", "ENOKEY", 
     /* 127 */ "EKEYEXPIRED", "EKEYREVOKED", "EKEYREJECTED", 
     /* 130 */ "EOWNERDEAD", "ENOTRECOVERABLE", "ERFKILL", "EHWPOISON"
-};
+    };
 
-#define MAX_ENAME 133
+
+

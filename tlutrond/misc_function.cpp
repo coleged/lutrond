@@ -72,14 +72,16 @@ logOpen(const char *logFilename)
     
 }//logOpen
 
-//************   logClose
+/************   logClose
+// Not used
 static void
 logClose(void)
 {
     if(flag.debug) logMessage("Closing log file");
     fclose(admin.logfp);
     
-}//logClose
+}//logClose */
+
 
 //************   pidFile - write my (parent) pid to pid file
 void

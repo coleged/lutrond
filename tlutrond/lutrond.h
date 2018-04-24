@@ -118,7 +118,6 @@ typedef struct{
             int actsockfd;
             bool connected;
     
-    
 }client_t;   // client socket
 
 typedef struct{

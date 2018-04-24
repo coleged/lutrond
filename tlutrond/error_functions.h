@@ -32,6 +32,9 @@ void errMsg(const char *format, ...);
 #define NORETURN
 #endif
 
+
+
+
 void errExit(const char *format, ...) NORETURN ;
 
 void err_exit(const char *format, ...) NORETURN ;

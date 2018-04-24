@@ -5,6 +5,8 @@ Created by Ed Cole on 19/04/2018.
 Copyright © 2018 Ed Cole. All rights reserved.
 
 threaded version of lutrond
+ 
+ V4.0       24/8/2018   test release
 
 */
 
@@ -33,46 +35,55 @@ daemon_t admin = {  0,                          // pid
 };
 
 client_t listener = {
-                    DEFAULT_PORT       //port
+                    DEFAULT_PORT,               //port
+                    0,                          //sockfd
+                    0,                          //actsockfd
+                    0                           //connected
 };
 
 lutron_t lutron ={
-                    (char *)LUTRON_HOST,     // lutron hostname
-                    (char *)LUTRON_PORT,     // telnet port number
-                    (char *)LUTRON_USER,     // Lutron UID
-                    (char *)LUTRON_PASS,     // Lutron password
-                    0                        // lutron FD for PTY (was lutron)
+                    (char *)LUTRON_HOST,     // host        lutron hostname
+                    (char *)LUTRON_PORT,     // lport       telnet port number
+                    (char *)LUTRON_USER,     // user        Lutron UID
+                    (char *)LUTRON_PASS,     // password    Lutron password
+                    0                        // fd          lutron FD for PTY
     
 };
 
-
+// the message queue is used to pass command messages between the thread that listens
+// for client connections to the thread with telnet session to the Lutron
 MessageQueue_t queue;                   // create in instance of a queue
 MessageQueue_t *mq = &queue;            // and a pointer to this queue
 
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
-jmp_buf JumpBuffer;                     // for non-local goto in signal traps
+
+//TODO. It seems best practice to dedicate a thread to singal traps and mask them out
+//      of all other threads. Not doing this at present. It's undefined which thread
+//      run these handlers, but as all they do is set riase further signals and/or
+//      modify global flags, it's not overly important.
 struct sigaction saCHLD,saHUP;          // two trap handlers. TODO combine
 pid_t telnet_pid;
 
-  pthread_t lutron_tid,client_tid,lutron_tid2;                      // Thread IDs
+pthread_t   lutron_tid,     // controlling lutron thread - perpetualy creates lutron_tid2's
+            client_tid,     // socket listening thread. Accepts connections, takes in commands
+                            // and pushes them to the message queue
+            lutron_tid2;    // Lutron session. Forks a telnet session using pty and transacts
+                            // commands off the queue.
 
 /**********************************************************************
           MAIN
  *********************************************************************/
 int main(int argc, const char *argv[]) {
     
-
   int thread_error;
-    // int status;
-    
-    int i,opt;
+  int i,opt;
 
-    testRoot();    // Exits if not run by root
-    printLerrors();
+    testRoot();         // Exit if not run by root
+    // printLerrors();  // TODO reminder to parse lutron ~ERROR messages
     
     //Parse command line options
-    while ((opt = getopt(argc, (char **)argv, "Dkvdtp:c:")) != -1){
+    while ((opt = getopt(argc, (char **)argv, "Dkhvdtp:c:")) != -1){
         switch (opt){
                 
             case 'D': // run in debug mode. Use as first option to catch all in this
@@ -103,7 +114,7 @@ int main(int argc, const char *argv[]) {
                 if(flag.debug) printf("test mode\n");
                 break;
                 
-            case 'k': // test mode, no Lutron connection
+            case 'k': // kill, cycle Lutron login session (and dump database)
                 flag.kill = true;
                 if(flag.debug) printf("kill mode\n");
                 break;
@@ -112,7 +123,8 @@ int main(int argc, const char *argv[]) {
                 printf("%s\n",VERSION);
                 exit(EXIT_SUCCESS);
                 break;
-                
+            
+            case 'h': // help
             default:
                 //usageError(argv[0]);
                 break;
@@ -145,7 +157,7 @@ int main(int argc, const char *argv[]) {
     openlog(SYSLOG_IDENT,SYSLOG_OPT,SYSLOG_FACILITY); // SYSLOG open
     syslog(SYSLOG_OPT,"startup. Also see %s",admin.log_file);
     
-    pidFile(admin.pid_file,argstr(argc,(char **)argv));
+    pidFile(admin.pid_file,argstr(argc,(char **)argv)); // write pid file
 
     if(flag.debug){
         printf("conf_file = %s\n",admin.conf_file);
@@ -154,7 +166,8 @@ int main(int argc, const char *argv[]) {
         printf("conf_file = %s\n",admin.conf_file);
     }
    
-   
+    // TODO impliment a signal handling thread for these. And mask these out of all other
+    // threads
     //  Install SIGCHLD handler
     sigemptyset(&saCHLD.sa_mask);
     saCHLD.sa_flags = SA_RESTART ;
@@ -162,7 +175,6 @@ int main(int argc, const char *argv[]) {
     if (sigaction(SIGCHLD, &saCHLD, NULL) == -1){
         error("Error loading SIGCHLD signal handler");
     }//if
-    
     
     //  Install SIGHUP handler
     sigemptyset(&saHUP.sa_mask);
@@ -174,51 +186,56 @@ int main(int argc, const char *argv[]) {
    
 
     // create the worker threads
+    
+    // socket listener thread
     thread_error = pthread_create(&client_tid, NULL, &client_listen, NULL);
-    if (thread_error != 0)
+    if (thread_error != 0){
+        logMessage("Socket thread creation failure");
         fprintf(stderr,"Can't create Client listen thread :[%s]\n", strerror(thread_error));
-    else
+        exit(EXIT_FAILURE);
+    }else{
         if(flag.debug) printf("main1:Thread created successfully\n");
+    }
     
-    
-    
-    
-    
+    // Lutron connection thread
     thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
     if (thread_error != 0){
+        logMessage("Lutron thread creation failure");
         fprintf(stderr,"Can't create Lutron thread :[%s]\n", strerror(thread_error));
         exit(EXIT_FAILURE);
+    }else{
+        if(flag.debug) printf("Main1:Thread created successfully\n");
     }
-    if(flag.debug) printf("Main1:Thread created successfully\n");
     
-    i=0;
+    // Main thread now loops and monitors
+    
+    i=0;            // watch dog loop counter
     while(true){
         usleep(10000000);
         if(flag.debug)printf("[%i]main:ping\n",i);
         ++i;
-        if( i%10 == 0 ) keepAlive(); // tickle the queue every 10 loops
-        if( i > 500 ){ // kill telnet every 500 loops
-            flag.dump=true;
+        if( i % 10 == 0 ) keepAlive(); // tickle the queue every 10 loops
+        if( i > 500 ){              // kill telnet every 500 loops
+            flag.dump=true;         // and cause database to be dumped in so doing
             if (getpgid(telnet_pid) >= 0){ // crafty way to see if process exists
-                kill(telnet_pid,SIGHUP);
+                kill(telnet_pid,SIGHUP);    // the forked session. Should terminate and
+                                            // raise a SIGCHLD
                 if(flag.debug) printf("main1:SIGHUP sent to telnet\n");
-            }else{ // re-thread telnet
+            }else{                          // re-thread telnet
                 if(flag.debug) printf("main1:telnet not running\n");
-                pthread_kill(lutron_tid2,SIGHUP);
-                /* Shouldn't rethread lutron_connection - as existing thread is joined to
-                        lutron_tid2, so will rethread when lutron_tid2 dies.
-                thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
-                if (thread_error != 0){
-                    fprintf(stderr,"main2:Can't create Lutron thread :[%s]\n", strerror(thread_error));
-                    exit(EXIT_FAILURE);
-                }*/
+                pthread_kill(lutron_tid2,SIGHUP);  // kill the thread that forked telnet
+                            // when lutron_tid2 dies, lutron_tid will start another one
                 
                 if(flag.debug) printf("main2:Thread killed successfully\n");
+                    // TODO .. we don't know this for sure as we havn't tested the
+                    // return value of pthread_kill
             }
             i=0;
-            flag.connected=false;
+            flag.connected=false; // will cause telnet_tid2 to initiate lutron login process
+                                  // probably done elswhere in the logic, but it doesn't hurt.
         }//if (i > 50)
     }//while true
    // NEVER REACHED
 }
+
 
