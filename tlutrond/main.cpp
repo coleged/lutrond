@@ -76,7 +76,7 @@ lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 struct sigaction saCHLD,saHUP;          // two trap handlers. TODO combine
 pid_t telnet_pid;
 
-pthread_t   lutron_tid,     // controlling lutron thread - perpetualy creates lutron_tid2's
+pthread_t   lutron_tid,     // controlling lutron thread - perpetually creates lutron_tid2's
             client_tid,     // socket listening thread. Accepts connections, takes in commands
                             // and pushes them to the message queue
             lutron_tid2;    // Lutron session. Forks a telnet session using pty and transacts
@@ -140,14 +140,14 @@ int main(int argc, const char *argv[]) {
             
             case 'h': // help
             default:
-                //usageError(argv[0]);
+                usageError(argv[0]);
                 break;
                 
         }//switch
     }//while opt parse
     
-    if(flag.debug)printf("command ops parsed\n");
-    if(flag.debug)printf("logfile: %s\n",admin.log_file);
+    if(flag.debug)fprintf(stderr,"command ops parsed\n");
+    if(flag.debug)fprintf(stderr,"logfile: %s\n",admin.log_file);
     
     
     if (readConfFile(admin.conf_file)==EXIT_FAILURE){
@@ -222,6 +222,7 @@ int main(int argc, const char *argv[]) {
     }
     
     // Main thread now loops and monitors
+    usleep(10000000); // give the worker threads some time to set up socket & connection
     
     i=0;            // watch dog loop counter
     while(true){

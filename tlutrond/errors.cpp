@@ -60,14 +60,13 @@ void
 usageError(const char *prog)
 {
     fprintf(stderr,"\nUsage:\n %s [options]\n",MY_NAME);
-    fprintf(stderr,"\nOptions:\n -c file\t\tread configuration file \"file\"\n");
-    fprintf(stderr," -p port\t\tlisten on port number \"port\"\n");
-    fprintf(stderr," -d\t\t\trun as a daemon\n");
-    fprintf(stderr," -D\t\t\tdebug mode\n");
-    fprintf(stderr," -t\t\t\ttest mode - do not connect to Lutron\n");
-    fprintf(stderr," -v\t\t\tprints version and exits\n");
-    fprintf(stderr," -k\t\t\tsends SIGHUP to Lutron telnet session forcing\n");
-    fprintf(stderr," \t\t\t\tnew session\n");
+    fprintf(stderr,"\nOptions:\n -c file\tread configuration file \"file\"\n");
+    fprintf(stderr," -p port\tlisten on port number \"port\"\n");
+    fprintf(stderr," -d\t\trun as a daemon\n");
+    fprintf(stderr," -D\t\tdebug mode\n");
+    fprintf(stderr," -t\t\ttest mode - do not connect to Lutron\n");
+    fprintf(stderr," -v\t\tprints version and exits\n");
+    fprintf(stderr," -k\t\tsends SIGHUP to Lutron telnet session forcing new session\n");
     exit(EXIT_FAILURE);
 }//usageError
 

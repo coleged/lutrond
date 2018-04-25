@@ -14,7 +14,7 @@ LIBS =  -lconfig
 CC = g++
 CFLAGS = -std=c++11
 # DFLAGS for development build
-DFLAGS = -D_DEBUG=true
+#DFLAGS = -D_DEBUG=true
 # DFLAGS for production build
 #DFLAGS = -D_ROOT_PRIV
 

@@ -34,7 +34,6 @@ lutrond V4.0 April 2018
 #include <sys/types.h>
 #include <ctype.h>
 #include <sys/socket.h>
-#include <setjmp.h>	// for non local goto in signal trap
 
 #ifdef MAC_OS10		// Mac OS doesn't have pty.h and header search path is broken
 #include <util.h>
@@ -50,12 +49,6 @@ lutrond V4.0 April 2018
 #include <sys/stat.h>
 #include <netinet/in.h>
 
-#ifdef MAC_OS10
-#include "/usr/local/include/libconfig.h"
-#else
-#include <libconfig.h>
-#endif
-
 #include <time.h>
 #include <syslog.h>
 #include <libgen.h>    // for basename()
@@ -65,12 +58,6 @@ lutrond V4.0 April 2018
 #undef		max
 #include "unp.h"		// uses some code snarfed from the UNP book
 
-#ifndef _DEBUG
-#define _DEBUG false		// dont change this - pass it via -D_DEBUG=1 at compile
-#endif
-#ifndef _TEST_MODE		// dont change this - pass it via -D_TEST_MODE=1 at compile
-#define _TEST_MODE false		// TEST_MODE = No Lutron connection
-#endif				// can also be set at runtime with -t option
 
 #define MY_NAME "lutrond"
 #define VERSION "4.0.0"
@@ -102,8 +89,7 @@ lutrond V4.0 April 2018
 
 #define SYSLOG_OPT (LOG_PID | LOG_NDELAY | LOG_NOWAIT)
 #define SYSLOG_FACILITY LOG_LOCAL7
-//#define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
-#define CONFIG_FILE     "/tmp/lutrond.conf"
+#define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
 #define DEFAULT_PORT    4534
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
@@ -183,9 +169,7 @@ char **strarg(char *);		   // string to args
 int testRoot();
 void* client_listen(void *);
 void* lutron_connection(void *);
-char *lerror(int);
 void error(const char *);
-void printLerrors();
 int readConfFile(char *);
 void pidFile(const char *,char *);
 void parse_response(char *, char *);
@@ -194,4 +178,5 @@ void sigchldHandler(int);
 void sighupHandler(int);
 void dump_db();
 void keepAlive();
+void usageError(const char *);
 /**********************  END END END ***********************************/
