@@ -34,21 +34,17 @@ void* lutron_doit(void *);
 //************* lutron_connection()
 void* lutron_connection(void *arg){
     
-    
-    // int status;
-    
+    // perpetually respawn Luton Connection threads.
     
     while( true ){
         // create lutron connection thread
-        if(flag.debug) printf("lutron_connection: new connection\n");
+        if(flag.debug) fprintf(stderr,"lutron_connection: new connection\n");
         if( pthread_create(&lutron_tid2, NULL, &lutron_doit, NULL) != 0){
-            fprintf(stderr,"lutron_connection: new connection\n");
             logMessage("lutron_connection: failed to create thread");
+            error("Lutron thread");
         };
         pthread_join (lutron_tid2, NULL); // wait for thread to die
-        // not sure about the need for this wait and wonder it might block
-        // while( waitpid(telnet_pid,&status, WNOHANG) > 0){}; // waits for child to die
-        if(flag.debug) printf("lutron_connection: thread died\n");
+        if(flag.debug) fprintf(stderr,"lutron_connection: thread died\n");
     }
     
 }//END************* lutron_connection()
@@ -72,7 +68,6 @@ void* lutron_doit(void *arg){
     
     if( !flag.test){
         //Establish Lutron connection
-        if(flag.debug) printf("connecting to Lutron\n");
         logMessage("Esablishing Luton connect");
         flag.connected = false;
         if (lutron.fd > 0) close(lutron.fd); // close the existing file descriptor if open
@@ -80,14 +75,16 @@ void* lutron_doit(void *arg){
         if (pid < 0) { // forking error
             // TODO error("Forking error");
             fprintf(stderr,"Forking error\n");
-            exit(EXIT_FAILURE);
+            error("Forking");
         }//if
         
         if (pid == 0) {// child
             
-                if(flag.debug)printf("fork OK\n");
+                if(flag.debug)fprintf(stderr,"fork OK\n");
                 const char *args[] = {"telnet",lutron.host,lutron.lport,NULL};
                 execvp(TELNET_PROG, (char **)args);
+                // if we get here, exec must have failed
+                error("exec");
             
         }// if child
         //*************************************************END CHILD
@@ -105,7 +102,7 @@ void* lutron_doit(void *arg){
         tcsetattr(lutron.fd, TCSAFLUSH, &tios);
         //*************************************************END LUTRON EST
         
-                if(flag.debug) printf("Lutron FD=%i",lutron.fd);
+                if(flag.debug) fprintf(stderr,"Lutron FD=%i",lutron.fd);
         
                 // Logon loop
                 while( !flag.connected){ // logon to lutron
@@ -136,21 +133,17 @@ void* lutron_doit(void *arg){
                 }// While not_connected
                 // NOW LOGGED ON
         
-            if(flag.debug) printf("Connected to Lutron\n");
+            if(flag.debug) fprintf(stderr,"Connected to Lutron\n");
             while(flag.connected){
-                
-                pthread_mutex_lock(&mq->mu_queue);       // lock queue
-                if(!mq->msg_queue.empty())               // if queue not empty
-                {
-                    str = mq->msg_queue.front();         // read string at front
-                    //  of queue
+                if(!mq->msg_queue.empty()){               // if queue not empty
+                    pthread_mutex_lock(&mq->mu_queue);       // lock queue
+                    str = mq->msg_queue.front();         // read string
                     mq->msg_queue.pop();                 // and pop it
-                    // send command to lutron
+                    pthread_mutex_unlock(&mq->mu_queue); // unlock queue
+                    pthread_cond_signal(&mq->cond);      // sig any blocked threads
                     write(lutron.fd,str.c_str(),strlen(str.c_str()));
                     write(lutron.fd,"\r\n",2);
                 }// if !empty()
-                pthread_mutex_unlock(&mq->mu_queue); // unlock queue
-                pthread_cond_signal(&mq->cond);      // sig any blocked threads
                 FD_ZERO(&read_fd);
                 FD_ZERO(&write_fd);
                 FD_ZERO(&except_fd);
@@ -160,9 +153,7 @@ void* lutron_doit(void *arg){
                 if(FD_ISSET(lutron.fd, &read_fd)){
                     bzero(lutron_buff,lutron_buff_sz);
                     l_bytes=(int)read(lutron.fd,&lutron_buff,lutron_buff_sz);
-                    parse_response((char *)"L3>>",lutron_buff);
-                    if(flag.debug) printf("L3>> %s\n",lutron_buff);
-                    // if(flag.debug) printf("Done reading lutron(3)\n");
+                    parse_response((char *)"LC>>",lutron_buff);
                 }//if ISSET lutron
             }//while flag.connected
         
@@ -177,12 +168,12 @@ void* lutron_doit(void *arg){
                 mq->msg_queue.pop();                // and pop it
                 pthread_mutex_unlock(&mq->mu_queue);    // unlock queue
                 pthread_cond_signal(&mq->cond);         // sig any blocked threads
-                printf(">>>>>>>>>>>>>>%s",str.c_str());         // print it
+                printf("%s",str.c_str());         // print it
             }// if !empty()
             usleep(10000);
         }
     }
-    if(flag.debug)printf("lutron_doit: thread terminating\n");
+    if(flag.debug)fprintf(stderr,"lutron_doit: thread terminating\n");
     pthread_exit(NULL);
 
 }//END************* lutron_doit()

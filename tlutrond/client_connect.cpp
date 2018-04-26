@@ -52,7 +52,7 @@ char *getString(){     // uses a static index (i) to return
 //*****************pushq()
 int pushq(std::string arg) // pushes string onto queue
 {
-    if(flag.debug)printf("pushing %s\n",arg.c_str());
+    if(flag.debug)fprintf(stderr,"pushing %s\n",arg.c_str());
     pthread_mutex_lock(&mq->mu_queue);    // lock the queue via the pointer
     mq->msg_queue.push(arg);              // push the string onto queue
     pthread_mutex_unlock(&mq->mu_queue);  // unlock the queue
@@ -85,7 +85,6 @@ void* client_listen(void *arg){
     fcntl(listener.sockfd, F_SETFD, FD_CLOEXEC);       // set some socket options
     if (listener.sockfd < 0){
         logMessage("Can't open listening socket");
-        if(flag.debug)fprintf(stderr,"cant open listening socket\n");
         error("ERROR opening socket");
     }
     if (setsockopt(listener.sockfd,
@@ -94,7 +93,6 @@ void* client_listen(void *arg){
                    &optval,             // {=1}
                    sizeof(int)) < 0){
         logMessage("Can't SO_REUSEADDR socket");
-        if(flag.debug)fprintf(stderr,"cant SO_REUSEADDR socket\n");
         error("setsockopt(SO_REUSEADDR) failed");
     }//if setsocketopt
     socklen = sizeof(serv_addr);
@@ -103,84 +101,70 @@ void* client_listen(void *arg){
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(listener.port);
     if(flag.debug){
-        logMessage("bind socket");
-        printf("bind socket(FD = %i)\n",listener.sockfd);
+        logMessage("bind socket(FD = %i)\n",listener.sockfd);
     }// if debug
     if (bind(listener.sockfd,(struct sockaddr *) &serv_addr, socklen) < 0) {
-        if(flag.debug)fprintf(stderr,"binding error\n");
+        logMessage("binding error\n");
         error("ERROR on binding");
     }//if
     if(flag.debug) logMessage("listen");
     listen(listener.sockfd,SOC_BL_QUEUE);
 
     while(true){ // bind loop
+        FD_ZERO(&read_fd);
+        FD_ZERO(&write_fd);
+        FD_ZERO(&except_fd);
+        FD_SET(listener.sockfd, &read_fd);
+        select(listener.sockfd+1, &read_fd, &write_fd, &except_fd, NULL); // Blocks
+        if(FD_ISSET(listener.sockfd, &read_fd)){ // client connect attempt
+            listener.actsockfd = accept(listener.sockfd,
+                                        (struct sockaddr *) &act_addr,&socklen);
+            if (listener.actsockfd < 0){
+                accept_fails++;
+                logMessage("failed accept on socket");
+                fprintf(stderr,"failed to accept connection[%i]\n",accept_fails);
+                close(listener.sockfd);
+                break; // bind loop, go re-establish listening socket
+            }
+            listener.connected = true;
+            if(flag.debug) printf("Accept connection (active socket FD= %i)\n",
+                                 listener.actsockfd);
+            
+            cli_socklen = sizeof(cli_addr);
+            getpeername(listener.actsockfd,
+                        (struct sockaddr *) &cli_addr,
+                        &cli_socklen);
+            if(flag.debug)printf("Connection received\n");
+            
+            syslog(SYSLOG_OPT,"Connection from %s",inet_ntoa(cli_addr.sin_addr));
+            logMessage("Connection from %s ==========",inet_ntoa(cli_addr.sin_addr));
+        }// if FD_ISSET(read) on listener.sockfd
         
+        while( listener.connected ){
             FD_ZERO(&read_fd);
             FD_ZERO(&write_fd);
             FD_ZERO(&except_fd);
-            FD_SET(listener.sockfd, &read_fd);
-            select(listener.sockfd+1, &read_fd, &write_fd, &except_fd, NULL); // Blocks
-            if(FD_ISSET(listener.sockfd, &read_fd)){ // client connect attempt
-                listener.actsockfd = accept(listener.sockfd,
-                                            (struct sockaddr *) &act_addr,&socklen);
-                if (listener.actsockfd < 0){
-                    accept_fails++;
-                    logMessage("failed accept on socket");
-                    fprintf(stderr,"failed to accept connection[%i]\n",accept_fails);
-                    close(listener.sockfd);
-                    break; // bind loop, go re-establish listening socket
-                }
-                listener.connected = true;
-                if(flag.debug) printf("Accept connection (active socket FD= %i)\n",
-                                     listener.actsockfd);
-                
-                cli_socklen = sizeof(cli_addr);
-                getpeername(listener.actsockfd,
-                            (struct sockaddr *) &cli_addr,
-                            &cli_socklen);
-                if(flag.debug)printf("Connection received\n");
-                
-                syslog(SYSLOG_OPT,"Connection from %s",inet_ntoa(cli_addr.sin_addr));
-                logMessage("Connection from %s ==========",inet_ntoa(cli_addr.sin_addr));
-            }// if FD_ISSET(read) on listener.sockfd
-            
-            while( listener.connected ){
-                FD_ZERO(&read_fd);
-                FD_ZERO(&write_fd);
-                FD_ZERO(&except_fd);
-                FD_SET(listener.actsockfd, &read_fd);
-                if(select(listener.actsockfd+1, &read_fd, &write_fd, &except_fd, NULL)>0){
-                    if (FD_ISSET(listener.actsockfd, &read_fd)){
-                        // we process all that the client has to say
-                        if(flag.debug)printf("input from client\n");
-                        bzero(&soc_buffer,BUFFERSZ);
-                        while((bytes_in = (int)Readline(listener.actsockfd,
-                                                   soc_buffer,BUFFERSZ)) > 0 ){
-                            
-                            write(listener.actsockfd,"thanks\n",7); // client waits for ack
-                            
-                            if(flag.debug) printf("%s\n",soc_buffer);
-                            
-                                // write it to queue
-                                //write(lutron,soc_buffer,bytes_in+1);
-                                msg = soc_buffer;
-                                pushq(msg);
-                                
-                            
-                             if(flag.debug) printf("C1<< %s\n",soc_buffer);
-                             //parse_response("C1<<",soc_buffer);
-                           } // while read
-                           if(flag.debug) printf("Done reading client\n");
-                           close(listener.actsockfd);
-                           listener.connected=false;
-                        }//if FD_SET
-                    }// select
-            }//while listener.connected
-            
-        
+            FD_SET(listener.actsockfd, &read_fd);
+            if(select(listener.actsockfd+1, &read_fd, &write_fd, &except_fd, NULL)>0){
+                if (FD_ISSET(listener.actsockfd, &read_fd)){
+                    // we process all that the client has to say
+                    if(flag.debug)printf("input from client\n");
+                    bzero(&soc_buffer,BUFFERSZ);
+                    while((bytes_in = (int)Readline(listener.actsockfd,
+                                               soc_buffer,BUFFERSZ)) > 0 ){
+                        write(listener.actsockfd,"thanks\n",7); // client waits for ack
+                        if(flag.debug) printf("%s\n",soc_buffer);
+                        msg = soc_buffer;
+                        pushq(msg);
+                    } // while Readline
+                    if(flag.debug) printf("Done reading client\n");
+                    close(listener.actsockfd);
+                    listener.connected=false;
+                }//if FD_SET
+            }// select
+        }//while listener.connected
     }// while true (bind loop}
   }// while true (main loop)
-
 }// client_listen()
 
   

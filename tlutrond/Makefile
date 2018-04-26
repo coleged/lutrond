@@ -10,13 +10,15 @@
 #                                                                         *
 #*************************************************************************/
 TARGET = lutrond
+INSTALL_DIR = /usr/local/bin/
 LIBS =  -lconfig
 CC = g++
 CFLAGS = -std=c++11
+# All DFLAGS SET VIA build.h
 # DFLAGS for development build
-#DFLAGS = -D_DEBUG=true
+# DFLAGS = -D_DEBUG=true
 # DFLAGS for production build
-#DFLAGS = -D_ROOT_PRIV
+# DFLAGS = -D_ROOT_PRIV
 
 .PHONY: default all clean install
 
@@ -38,3 +40,9 @@ $(TARGET): Makefile $(OBJECTS) $(HEADERS)
 clean:
 	-rm -f *.o
 	-rm -f $(TARGET)
+
+install:
+	(sudo  killall -q lutrond) &> /dev/null
+	sudo cp lutrond $(INSTALL_DIR)
+	sudo $(INSTALL_DIR)/lutrond -d
+

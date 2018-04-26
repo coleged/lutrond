@@ -53,7 +53,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     while( tok != NULL ){
         switch(tok[0]){
             case 'Q':
-                logMessage("QNET:>>");
+                // logMessage("QNET:>>");
                 
                 break;
                 
@@ -117,7 +117,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             if(device[dev].comp[n].num == component){
                                 device[dev].comp[n].value=action;
                                 found=TRUE;
-                                logMessage("DATABASE HIT (DEVICE)");
+                                // logMessage("DATABASE HIT (DEVICE)");
                                 break;
                             }//if
                             ++n;
@@ -128,7 +128,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             if(!found){
                                 device[dev].comp[n].num = component;
                                 device[dev].comp[n].value = action;
-                                logMessage("DATABASE HIT (DEVICE) NEW");
+                                // logMessage("DATABASE HIT (DEVICE) NEW");
                             }// if !found
                         }//if
                     }// if ~DEVICE

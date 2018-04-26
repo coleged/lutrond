@@ -47,6 +47,9 @@ logMessage(const char *format, ...)
     char timestamp[TS_BUF_SIZE];
     time_t t;
     struct tm *loc;
+    char line[256];
+    
+    
     
     t = time(NULL);
     loc = localtime(&t);
@@ -57,7 +60,11 @@ logMessage(const char *format, ...)
         fprintf(admin.logfp, "%s: ", timestamp);
     }//else
     va_start(argList, format);
-    vfprintf(admin.logfp, format, argList);
+    vsprintf(line, format, argList);
+    fprintf(admin.logfp,"%s",line);
+    if(flag.debug){
+        fprintf(stderr,"%s\n",line);
+    }
     fprintf(admin.logfp, "\n");
     va_end(argList);
 }//logMessage

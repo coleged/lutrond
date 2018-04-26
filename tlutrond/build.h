@@ -23,8 +23,8 @@
 
 #define MAC_OS10
 
-// #define _ROOT_PRIV
+#define _ROOT_PRIV
 #define _DEBUG false
-#define _TEST_MODE true
+#define _TEST_MODE false
 
 #endif /* build_h */

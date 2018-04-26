@@ -49,7 +49,7 @@ static void    err_doit(int, int, const char *, va_list);
 void
 error(const char *msg)
 {
-    logMessage("ERROR:%s",msg);
+    //logMessage("ERROR:%s",msg);
     perror(msg);
     exit(EXIT_FAILURE);
 }//perror
@@ -67,6 +67,7 @@ usageError(const char *prog)
     fprintf(stderr," -t\t\ttest mode - do not connect to Lutron\n");
     fprintf(stderr," -v\t\tprints version and exits\n");
     fprintf(stderr," -k\t\tsends SIGHUP to Lutron telnet session forcing new session\n");
+    fprintf(stderr," -h\t\tprint this text\n");
     exit(EXIT_FAILURE);
 }//usageError
 

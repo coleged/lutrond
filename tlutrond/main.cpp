@@ -103,11 +103,11 @@ int main(int argc, const char *argv[]) {
             case 'D': // run in debug mode. Use as first option to catch all in this
                 // switch block
                 flag.debug=true;
-                printf("Debug mode set\n");
+                fprintf(stderr,"Debug mode set\n");
                 break;
                 
             case 'd': // Run as a daemon
-                if(flag.debug) printf("Running as a Daemon\n");
+                if(flag.debug) fprintf(stderr,"Running as a Daemon\n");
                 becomeDaemon((int)(   BD_NO_CLOSE_FILES |
                                         BD_NO_CHDIR |
                                         BD_NO_REOPEN_STD_FDS));
@@ -125,12 +125,12 @@ int main(int argc, const char *argv[]) {
                 
             case 't': // test mode, no Lutron connection
                 flag.test = true;
-                if(flag.debug) printf("test mode\n");
+                if(flag.debug) fprintf(stderr,"test mode\n");
                 break;
                 
             case 'k': // kill, cycle Lutron login session (and dump database)
                 flag.kill = true;
-                if(flag.debug) printf("kill mode\n");
+                if(flag.debug) fprintf(stderr,"kill mode\n");
                 break;
                 
             case 'v': // version
@@ -159,13 +159,12 @@ int main(int argc, const char *argv[]) {
     
     if( flag.kill ){ // send HUP to existing process or respawn
         if(lutkill(admin.pid_file)==EXIT_SUCCESS){
-            if(flag.debug) printf("kill succeded\n");
-            logMessage("[lutrond -k]  succeded\n");
+            logMessage("[lutrond -k]  succeded");
             exit(EXIT_SUCCESS);
         }//if
         // Kill failed
-        logMessage("[lutrond -k] kill -HUP attempt failed\n");
-        exit(EXIT_FAILURE);
+        logMessage("[lutrond -k] kill -HUP attempt failed");
+        error("kill failed");
     }// if kill_flag
     
     openlog(SYSLOG_IDENT,SYSLOG_OPT,SYSLOG_FACILITY); // SYSLOG open
@@ -174,10 +173,10 @@ int main(int argc, const char *argv[]) {
     pidFile(admin.pid_file,argstr(argc,(char **)argv)); // write pid file
 
     if(flag.debug){
-        printf("conf_file = %s\n",admin.conf_file);
-        printf("userid = %s\n",lutron.user);
-        printf("log_file = %s\n",admin.log_file);
-        printf("conf_file = %s\n",admin.conf_file);
+        fprintf(stderr,"conf_file = %s\n",admin.conf_file);
+        fprintf(stderr,"userid = %s\n",lutron.user);
+        fprintf(stderr,"log_file = %s\n",admin.log_file);
+        fprintf(stderr,"conf_file = %s\n",admin.conf_file);
     }
    
     // TODO impliment a signal handling thread for these. And mask these out of all other
@@ -204,30 +203,28 @@ int main(int argc, const char *argv[]) {
     // socket listener thread
     thread_error = pthread_create(&client_tid, NULL, &client_listen, NULL);
     if (thread_error != 0){
-        logMessage("Socket thread creation failure");
-        fprintf(stderr,"Can't create Client listen thread :[%s]\n", strerror(thread_error));
-        exit(EXIT_FAILURE);
+        logMessage("Client socket thread creation failure :[%s]",strerror(thread_error));
+        error("Client socket thread creation");
     }else{
-        if(flag.debug) printf("main1:Thread created successfully\n");
+        if(flag.debug) fprintf(stderr,"main1:Client Listen thread created successfully\n");
     }
     
     // Lutron connection thread
     thread_error = pthread_create(&lutron_tid, NULL, &lutron_connection, NULL);
     if (thread_error != 0){
-        logMessage("Lutron thread creation failure");
-        fprintf(stderr,"Can't create Lutron thread :[%s]\n", strerror(thread_error));
-        exit(EXIT_FAILURE);
+        logMessage("Lutron socket thread creation failure :[%s]",strerror(thread_error));
+        error("Lutron socket thread creation");
     }else{
-        if(flag.debug) printf("Main1:Thread created successfully\n");
+        if(flag.debug) fprintf(stderr,"Main1:Lutron thread created successfully\n");
     }
     
     // Main thread now loops and monitors
     usleep(10000000); // give the worker threads some time to set up socket & connection
     
-    i=0;            // watch dog loop counter
+    i=0;            // watchdog loop counter
     while(true){
         usleep(10000000);
-        if(flag.debug)printf("[%i]main:ping\n",i);
+        //if(flag.debug)fprintf(stderr,"[%i]main:ping\n",i);
         ++i;
         if( i % 10 == 0 ) keepAlive(); // tickle the queue every 10 loops
         if( i > 500 ){              // kill telnet every 500 loops
@@ -235,13 +232,13 @@ int main(int argc, const char *argv[]) {
             if (getpgid(telnet_pid) >= 0){ // crafty way to see if process exists
                 kill(telnet_pid,SIGHUP);    // the forked session. Should terminate and
                                             // raise a SIGCHLD
-                if(flag.debug) printf("main1:SIGHUP sent to telnet\n");
+                if(flag.debug) fprintf(stderr,"main1:SIGHUP sent to telnet\n");
             }else{                          // re-thread telnet
-                if(flag.debug) printf("main1:telnet not running\n");
+                if(flag.debug) fprintf(stderr,"main1:telnet not running\n");
                 pthread_kill(lutron_tid2,SIGHUP);  // kill the thread that forked telnet
                             // when lutron_tid2 dies, lutron_tid will start another one
                 
-                if(flag.debug) printf("main2:Thread killed successfully\n");
+                if(flag.debug) fprintf(stderr,"main2:Lutron thread killed successfully\n");
                     // TODO .. we don't know this for sure as we havn't tested the
                     // return value of pthread_kill
             }
