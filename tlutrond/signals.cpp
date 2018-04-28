@@ -16,7 +16,7 @@
  
  lutrond V4.0 April 2018
  
- sigchldHandler(), sighupHandler()
+ sigchldHandler(), sighupHandler(), lutkill()
  
  ***********/
 
@@ -40,7 +40,8 @@ sigchldHandler(int sig)
     if(flag.debug) printf("SIGCHLD trapped (handler)\n"); // UNSAFE
     logMessage("SIGCHLD received");
     while( waitpid(-1,&status, WNOHANG) > 0){}; // waits for child to die
-    flag.connected = false; // force parent thread to exit.
+    flag.connected = false; // force lutron_connect thread to exit break out of
+                            // connected loop.
     
     
 }//sigchldHandler
@@ -50,13 +51,14 @@ void
 sighupHandler(int sig)
 {
     
-    // this isn't working as I believe xcode is catching SIGHUP for me ;-)
+    // NOTE: xcode catched SIGHUP for debuging.
     
-    // all we do here is kill child and then let the SIGCHLD handler do the
+    // all we do here is kill telnet and then let the SIGCHLD handler do the
     // rest when it catches this.
     
     if(flag.debug) printf("SIGHUP trapped (handler)\n"); // UNSAFE
     logMessage("SIGHUP received");
+    killTelnet();
     flag.dump=true; // cause db to be dumped
     
     
@@ -113,6 +115,27 @@ int lutkill(const char *pid_filename) {  // -k routine
     logMessage("lutrond -k failed to exec process");
     
     return (EXIT_FAILURE); // if we get here its proper broke
+    
+}
+
+void killTelnet(){
+    
+    if (getpgid(telnet_pid) >= 0){  // crafty way to see if process exists
+        kill(telnet_pid,SIGTERM);    // the forked session. Will terminate and
+        // raise a SIGCHLD, which will cause
+        // lutron_tid2 to end and be recreated by
+        // lutron_tid
+        if(flag.debug) fprintf(stderr,"main1:SIGHUP sent to telnet\n");
+    }else{                          // re-thread telnet
+        if(flag.debug) fprintf(stderr,"main1:telnet not running\n");
+        pthread_kill(lutron_tid2,SIGTERM);  // kill lutron_tid2, the thread that
+        // forked telnet
+        // when lutron_tid2 dies, lutron_tid will start another one
+        
+        if(flag.debug) fprintf(stderr,"main2:Lutron thread killed successfully\n");
+        // TODO .. we don't know this for sure as we havn't tested the
+        // return value of pthread_kill
+    }
     
 }
 

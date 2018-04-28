@@ -77,6 +77,13 @@ void* client_listen(void *arg){
     fd_set write_fd;
     fd_set except_fd;
     int accept_fails=0;
+    sigset_t set;
+    
+    sigemptyset(&set);
+    
+  sigaddset(&set, SIGHUP);
+  sigaddset(&set, SIGCHLD);
+  pthread_sigmask(SIG_BLOCK, &set, NULL);
 
   while(true){ // main loop
     // Establish Listening socket

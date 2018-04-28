@@ -43,6 +43,10 @@ lutrond V4.0 April 2018
 #include <libconfig.h>
 #endif
 
+#ifdef LINUX
+#include <sys/prctl.h>      // prctl is used to set parent death signal (PR_SET_PDEATHSIG)
+#endif                      // of telnet process to SIGTERM to stop zombie creation
+
 #include <termios.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
@@ -179,4 +183,5 @@ void sighupHandler(int);
 void dump_db();
 void keepAlive();
 void usageError(const char *);
+void killTelnet();
 /**********************  END END END ***********************************/

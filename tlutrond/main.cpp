@@ -179,8 +179,9 @@ int main(int argc, const char *argv[]) {
         fprintf(stderr,"conf_file = %s\n",admin.conf_file);
     }
    
-    // TODO impliment a signal handling thread for these. And mask these out of all other
-    // threads
+    //  Both these signals are blocked in the child threads
+    //  so the main thread will handle them
+    
     //  Install SIGCHLD handler
     sigemptyset(&saCHLD.sa_mask);
     saCHLD.sa_flags = SA_RESTART ;
@@ -218,6 +219,7 @@ int main(int argc, const char *argv[]) {
         if(flag.debug) fprintf(stderr,"Main1:Lutron thread created successfully\n");
     }
     
+    dump_db();
     // Main thread now loops and monitors
     usleep(10000000); // give the worker threads some time to set up socket & connection
     
@@ -227,24 +229,10 @@ int main(int argc, const char *argv[]) {
         //if(flag.debug)fprintf(stderr,"[%i]main:ping\n",i);
         ++i;
         if( i % 10 == 0 ) keepAlive(); // tickle the queue every 10 loops
-        if( i > 500 ){              // kill telnet every 500 loops
-            flag.dump=true;         // and cause database to be dumped in so doing
-            if (getpgid(telnet_pid) >= 0){ // crafty way to see if process exists
-                kill(telnet_pid,SIGHUP);    // the forked session. Should terminate and
-                                            // raise a SIGCHLD
-                if(flag.debug) fprintf(stderr,"main1:SIGHUP sent to telnet\n");
-            }else{                          // re-thread telnet
-                if(flag.debug) fprintf(stderr,"main1:telnet not running\n");
-                pthread_kill(lutron_tid2,SIGHUP);  // kill the thread that forked telnet
-                            // when lutron_tid2 dies, lutron_tid will start another one
-                
-                if(flag.debug) fprintf(stderr,"main2:Lutron thread killed successfully\n");
-                    // TODO .. we don't know this for sure as we havn't tested the
-                    // return value of pthread_kill
-            }
+        if( i > 500 ){
+            dump_db();                      // dump the database
+            killTelnet();                   // and kill the telnet process
             i=0;
-            flag.connected=false; // will cause telnet_tid2 to initiate lutron login process
-                                  // probably done elswhere in the logic, but it doesn't hurt.
         }//if (i > 50)
     }//while true
    // NEVER REACHED

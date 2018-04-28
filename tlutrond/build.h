@@ -22,9 +22,10 @@
 #define build_h
 
 #define MAC_OS10
+// #define LINUX
 
-#define _ROOT_PRIV
-#define _DEBUG false
+// #define _ROOT_PRIV
+#define _DEBUG true
 #define _TEST_MODE false
 
 #endif /* build_h */

@@ -34,6 +34,14 @@ void* lutron_doit(void *);
 //************* lutron_connection()
 void* lutron_connection(void *arg){
     
+    sigset_t set;
+    
+    // I do this here and any thread created will inherit the signal
+    // mask
+    sigemptyset(&set);
+    sigaddset(&set, SIGHUP);
+    sigaddset(&set, SIGCHLD);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
     // perpetually respawn Luton Connection threads.
     
     while( true ){
@@ -80,6 +88,10 @@ void* lutron_doit(void *arg){
         
         if (pid == 0) {// child
             
+#ifdef LINUX
+                prctl(PR_SET_PDEATHSIG, SIGTERM); // send child SIGTERM when parent dies
+#endif
+                // on MACOS we have zombie child at present
                 if(flag.debug)fprintf(stderr,"fork OK\n");
                 const char *args[] = {"telnet",lutron.host,lutron.lport,NULL};
                 execvp(TELNET_PROG, (char **)args);

@@ -89,17 +89,17 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             case ( 2 ): // dimmer
                                 if(action==1){//switching
                                     strcpy(device[dev].state,param);
-                                    logMessage("DATABASE HIT(1)");
+                                    //logMessage("DATABASE HIT(1)");
                                 }
                                 if((action==29)||(action==30)){//LED perhaps
-                                    logMessage("DATABASE HIT(29/30)");
+                                    //logMessage("DATABASE HIT(29/30)");
                                 }
                                 break;
                                 
                                 
                             default:
                                 strcpy(device[dev].state,param);
-                                logMessage("UNKNOWN DEVICE HIT(1)");
+                                // logMessage("UNKNOWN DEVICE HIT(1)");
                                 
                                 
                                 break;
