@@ -69,11 +69,6 @@ MessageQueue_t *mq = &queue;            // and a pointer to this queue
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
 
-//TODO. It seems best practice to dedicate a thread to singal traps and mask them out
-//      of all other threads. Not doing this at present. It's undefined which thread
-//      run these handlers, but as all they do is set riase further signals and/or
-//      modify global flags, it's not overly important.
-struct sigaction saCHLD,saHUP;          // two trap handlers. TODO combine
 pid_t telnet_pid;
 
 pthread_t   lutron_tid,     // controlling lutron thread - perpetually creates lutron_tid2's
@@ -89,6 +84,7 @@ int main(int argc, const char *argv[]) {
     
   int thread_error;
   int i,opt;
+  struct sigaction saCHLD,saHUP,saTERM;
 
     
 #ifdef _ROOT_PRIV
@@ -179,10 +175,11 @@ int main(int argc, const char *argv[]) {
         fprintf(stderr,"conf_file = %s\n",admin.conf_file);
     }
    
-    //  Both these signals are blocked in the child threads
-    //  so the main thread will handle them
+    //  These signals are blocked in the child threads
+    //  leaving the main thread to handle them
     
     //  Install SIGCHLD handler
+    if(flag.debug)fprintf(stderr,"Loading SIGCHLD handler\n");
     sigemptyset(&saCHLD.sa_mask);
     saCHLD.sa_flags = SA_RESTART ;
     saCHLD.sa_handler = sigchldHandler;
@@ -191,11 +188,21 @@ int main(int argc, const char *argv[]) {
     }//if
     
     //  Install SIGHUP handler
+    if(flag.debug)fprintf(stderr,"Loading SIGHUP handler\n");
     sigemptyset(&saHUP.sa_mask);
     saHUP.sa_flags = SA_RESTART ;
     saHUP.sa_handler = sighupHandler;
     if (sigaction(SIGHUP, &saHUP, NULL) == -1){
         error("Error loading HUP signal handler");
+    }//if
+    
+    //  Install SIGTERM handler
+    if(flag.debug)fprintf(stderr,"Loading SIGTERM handler\n");
+    sigemptyset(&saTERM.sa_mask);
+    saTERM.sa_flags = SA_RESTART ;
+    saTERM.sa_handler = sigtermHandler;
+    if (sigaction(SIGTERM, &saTERM, NULL) == -1){
+        error("Error loading TERM signal handler");
     }//if
    
 

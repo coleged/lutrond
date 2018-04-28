@@ -79,10 +79,10 @@ void* client_listen(void *arg){
     int accept_fails=0;
     sigset_t set;
     
-    sigemptyset(&set);
-    
+  sigemptyset(&set);
   sigaddset(&set, SIGHUP);
   sigaddset(&set, SIGCHLD);
+  sigaddset(&set, SIGTERM);
   pthread_sigmask(SIG_BLOCK, &set, NULL);
 
   while(true){ // main loop

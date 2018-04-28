@@ -16,7 +16,7 @@
  
  lutrond V4.0 April 2018
  
- sigchldHandler(), sighupHandler(), lutkill()
+ sigchldHandler(), sighupHandler(), lutkill(), killTelnet()
  
  ***********/
 
@@ -27,7 +27,13 @@
 
 #define CMD_LINE_LEN 256
 
-
+// SIGHUP and SIGCHLD are both blocked in subthreads leaving the main thread
+// to handle both these.
+//
+// The handlers operate thus:
+// SIGCHLD (i.e. telnet has died). set global flag.connected = false. This will cause
+//      connection loop in lutron thread to break, the thread die and a new one envoked
+// SIGHUP  Calls killTelnet which will in turn cause a SIGCHLD to be raised. See above.
 
 
 //************   sigchldHandler
@@ -59,13 +65,30 @@ sighupHandler(int sig)
     if(flag.debug) printf("SIGHUP trapped (handler)\n"); // UNSAFE
     logMessage("SIGHUP received");
     killTelnet();
-    flag.dump=true; // cause db to be dumped
-    
-    
-    
+    flag.dump=true; // cause db to be dumped next time it's tested.
     
     
 }//sighupHandler
+
+//************   sighupHandler
+void
+sigtermHandler(int sig)
+{
+    sigset_t set;
+    
+    sigemptyset(&set);
+    sigaddset(&set, SIGCHLD);
+    
+    sigprocmask(SIG_BLOCK,&set,NULL);  // BLOCK SIGCHLD across process while we kill child
+    if(flag.debug) printf("SIGTERM trapped (handler)\n"); // UNSAFE
+    logMessage("SIGTERM received");
+    // TODO might need to block SIGCHLD to stop it soiling graceful exit.
+    killTelnet();
+    exit(EXIT_SUCCESS);
+    
+}//sigtermHandler
+
+
 
 
 
@@ -120,14 +143,17 @@ int lutkill(const char *pid_filename) {  // -k routine
 
 void killTelnet(){
     
+    int status;
+    
     if (getpgid(telnet_pid) >= 0){  // crafty way to see if process exists
-        kill(telnet_pid,SIGTERM);    // the forked session. Will terminate and
+        kill(telnet_pid,SIGKILL);    // the forked session. Will terminate and
         // raise a SIGCHLD, which will cause
         // lutron_tid2 to end and be recreated by
         // lutron_tid
-        if(flag.debug) fprintf(stderr,"main1:SIGHUP sent to telnet\n");
+        if(flag.debug) fprintf(stderr,"killTelnet: SIGTERM sent to telnet\n");
+        waitpid(telnet_pid, &status, WNOHANG);
     }else{                          // re-thread telnet
-        if(flag.debug) fprintf(stderr,"main1:telnet not running\n");
+        if(flag.debug) fprintf(stderr,"killTelnet: telnet not running\n");
         pthread_kill(lutron_tid2,SIGTERM);  // kill lutron_tid2, the thread that
         // forked telnet
         // when lutron_tid2 dies, lutron_tid will start another one
