@@ -16,12 +16,47 @@
  
  lutrond V4.0 April 2018
  
- parse_response()
+ parse_response() runScript()
  
  ***********/
 
 #include "lutrond.h"
 #include "externals.h"
+
+// array of strings describing Lutron device types by number
+#define _NO_OF_TYPES 18
+std::string types[_NO_OF_TYPES] = {
+    "",
+    "switched bulb",        //1
+    "dimmed bulb",          //2
+    "blind/curtain motor",  //3
+    "fan",                  //4
+    "3 key pad",            //5
+    "5 key pad",            //6
+    "10 key pad",           //7
+    "virtual key pad",      //8
+    "digital input module", //9
+    "8 key pad",            //10
+    "Wireless remote",      //11
+    "Intruder",             //12
+    "PIR inputs",           //13
+    "Areas",                //14
+    "Timeclocks",           //15
+    "variables",            //16
+    "sequences"             //17
+};
+
+void runScript(char *path){
+    
+    logMessage("Runscript: %s", path);
+    system(path);
+    
+    // TODO. SIGCHLD is blocked while system() call runs...
+    // but this looks like it's just for this thread as the main thread
+    // catches a SIGCHLD and kills the lutron connection as it should!!!
+    
+}
+
 
 //************   parse_response
 void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
@@ -94,6 +129,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                                 if((action==29)||(action==30)){//LED perhaps
                                     //logMessage("DATABASE HIT(29/30)");
                                 }
+                        
                                 break;
                                 
                                 
@@ -131,6 +167,9 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                                 // logMessage("DATABASE HIT (DEVICE) NEW");
                             }// if !found
                         }//if
+                        if(device[dev].comp[n].type==9){ // SCRIPT
+                            runScript(device[dev].comp[n].comp); // the path to script
+                        }
                     }// if ~DEVICE
                     
                 }// if inform

@@ -143,9 +143,9 @@ typedef struct {
         char state[7];      //  0% 100% or other - use #define Constants
           struct{
             int empty;	// 1st  comp. 1 =  there are no components modeled on this device 
-            char *comp;  // Lutron component type
+            char *comp;  // Lutron component type or script
             int num;     // Lutron as they are all over the shop
-            int type;    // LED, Button, Bulb, Dimmer etc
+            int type;    // LED, Button, Bulb, Dimmer, script(9) etc
             char *name;  // Friendly name for component
             int value;   // state, i.e. 0 for off/disable, 100 for 100% on etc
            } comp[NO_OF_COMPS]; //  1 to NO_OF_COMPS-1 (ignore 0)
