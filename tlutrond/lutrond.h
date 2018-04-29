@@ -72,7 +72,7 @@ lutrond V4.0 April 2018
 #define BUFFERSZ 4096    	// buffer for IPC - big because we dont
 				// do any significant flow control
 #define NO_OF_DEVICES 256	// Lutron devices
-#define NO_OF_COMPS 20		// Components per device
+#define NO_OF_COMPS 32		// Components per device
 
 // defaults. Some of these can be overridden in the lutrond.conf file (*)
 // or via command line option flags (+)
