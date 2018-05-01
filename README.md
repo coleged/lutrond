@@ -1,8 +1,14 @@
 
-Rewrite of lutrond using threads and C++ (or rather C with a bit of C++ [comiples as C++ anyway)
+Rewrite of lutrond using threads and C++ (or rather C with a bit of C++ [compiles as C++ anyway)
 
-WORK IN PROGRESS.
+STATUS:
 
-STATUS: Test release. Called lutrond V4.0
+Stable code.
 
+I've now rolled the production instance to using this version.
 
+the project lutrond should be considered depricated by this (tlutrond)
+
+May 2018
+
+TODO: retire and delete the lutrond project and write a README for this.
