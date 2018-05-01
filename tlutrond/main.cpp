@@ -25,7 +25,7 @@
 
 // Type defs and structs defined in lutrond.h
 
-// Global variable declarations (include these in externals.h)
+// Global variable declarations (these should be exported by inclusion in externals.h)
 
 flags_t flag = {
                     false,          // daemon
@@ -34,7 +34,8 @@ flags_t flag = {
                     false,          // connected
                     false,          // dump
                     false,          // kill
-                    false           // port
+                    false,           // port
+                    false           // sigchld_ignore
 };
 
 daemon_t admin = {  0,                          // pid
@@ -68,14 +69,14 @@ MessageQueue_t *mq = &queue;            // and a pointer to this queue
 
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
-
 pid_t telnet_pid;
 
 pthread_t   lutron_tid,     // controlling lutron thread - perpetually creates lutron_tid2's
             client_tid,     // socket listening thread. Accepts connections, takes in commands
                             // and pushes them to the message queue
-            lutron_tid2;    // Lutron session. Forks a telnet session using pty and transacts
+            lutron_tid2,    // Lutron session. Forks a telnet session using pty and transacts
                             // commands off the queue.
+            sig_tid;        // signal handling thread
 
 /**********************************************************************
           MAIN
@@ -84,8 +85,7 @@ int main(int argc, const char *argv[]) {
     
   int thread_error;
   int i,opt;
-  struct sigaction saCHLD,saHUP,saTERM;
-
+  
     
 #ifdef _ROOT_PRIV
     testRoot();         // Exit if not run by root
@@ -145,7 +145,6 @@ int main(int argc, const char *argv[]) {
     if(flag.debug)fprintf(stderr,"command ops parsed\n");
     if(flag.debug)fprintf(stderr,"logfile: %s\n",admin.log_file);
     
-    
     if (readConfFile(admin.conf_file)==EXIT_FAILURE){
         fprintf(stderr,"Running without conf file\n");
     };
@@ -175,37 +174,26 @@ int main(int argc, const char *argv[]) {
         fprintf(stderr,"conf_file = %s\n",admin.conf_file);
     }
    
-    //  These signals are blocked in the child threads
-    //  leaving the main thread to handle them
+    // signal handling thread - this inherits default sigmask
+    thread_error = pthread_create(&sig_tid, NULL, &signals_thread, NULL);
+    if (thread_error != 0){
+        logMessage("Signals thread creation failure :[%s]",strerror(thread_error));
+        error("Signals thread creation");
+    }else{
+        if(flag.debug) fprintf(stderr,"main1:Signals thread created successfully\n");
+    }
     
-    //  Install SIGCHLD handler
-    if(flag.debug)fprintf(stderr,"Loading SIGCHLD handler\n");
-    sigemptyset(&saCHLD.sa_mask);
-    saCHLD.sa_flags = SA_RESTART ;
-    saCHLD.sa_handler = sigchldHandler;
-    if (sigaction(SIGCHLD, &saCHLD, NULL) == -1){
-        error("Error loading SIGCHLD signal handler");
-    }//if
+    // TODO: revisit signals and telnet connection maintenance.
+    // I did try setting a pthread_sigmask here to better manage the masks of the
+    // spawned threads below, but got into a tangled maze, and couldn't get SIGHUP
+    // and SIGCHLD to both work as required, so used a bit of brute force with the
+    // flag.ignore_chld flag. Issue I needed to deal with was the SIGCHLD raised when
+    // the script spawned a was being caught as the death of telnet and a new connection
+    // inititated. An ugly, but non critical side effect, that I don't want.
+    //
+    // It might be that the join/wait on the telnet connect thread is all that is required
+    // and I don't need a SIGCHLD handler at all.
     
-    //  Install SIGHUP handler
-    if(flag.debug)fprintf(stderr,"Loading SIGHUP handler\n");
-    sigemptyset(&saHUP.sa_mask);
-    saHUP.sa_flags = SA_RESTART ;
-    saHUP.sa_handler = sighupHandler;
-    if (sigaction(SIGHUP, &saHUP, NULL) == -1){
-        error("Error loading HUP signal handler");
-    }//if
-    
-    //  Install SIGTERM handler
-    if(flag.debug)fprintf(stderr,"Loading SIGTERM handler\n");
-    sigemptyset(&saTERM.sa_mask);
-    saTERM.sa_flags = SA_RESTART ;
-    saTERM.sa_handler = sigtermHandler;
-    if (sigaction(SIGTERM, &saTERM, NULL) == -1){
-        error("Error loading TERM signal handler");
-    }//if
-   
-
     // create the worker threads
     
     // socket listener thread

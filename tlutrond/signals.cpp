@@ -16,7 +16,7 @@
  
  lutrond V4.0 April 2018
  
- sigchldHandler(), sighupHandler(), lutkill(), killTelnet()
+ sigchldHandler(), sighupHandler(), lutkill(), killTelnet(), signals_thread()
  
  ***********/
 
@@ -45,9 +45,14 @@ sigchldHandler(int sig)
     
     if(flag.debug) printf("SIGCHLD trapped (handler)\n"); // UNSAFE
     logMessage("SIGCHLD received");
-    while( waitpid(-1,&status, WNOHANG) > 0){}; // waits for child to die
-    flag.connected = false; // force lutron_connect thread to exit break out of
-                            // connected loop.
+    if (flag.sigchld_ignore){
+        logMessage("SIGCHLD ignored");
+        flag.sigchld_ignore = false;
+    }else{
+        while( waitpid(-1,&status, WNOHANG) > 0){}; // waits for child to die
+        flag.connected = false;     // force lutron_connect thread to break out of
+                                    // connected loop and thence re-establish connection
+    }//else
     
     
 }//sigchldHandler
@@ -57,7 +62,7 @@ void
 sighupHandler(int sig)
 {
     
-    // NOTE: xcode catched SIGHUP for debuging.
+    // NOTE: xcode catches SIGHUP for debuging.
     
     // all we do here is kill telnet and then let the SIGCHLD handler do the
     // rest when it catches this.
@@ -70,7 +75,7 @@ sighupHandler(int sig)
     
 }//sighupHandler
 
-//************   sighupHandler
+//************   sigtermHandler
 void
 sigtermHandler(int sig)
 {
@@ -79,19 +84,16 @@ sigtermHandler(int sig)
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
     
-    sigprocmask(SIG_BLOCK,&set,NULL);  // BLOCK SIGCHLD across process while we kill child
+    pthread_sigmask(SIG_BLOCK, &set, NULL); // BLOCK SIGCHLD in thread
+    sigprocmask(SIG_BLOCK,&set,NULL);  // BLOCK SIGCHLD across process
     if(flag.debug) printf("SIGTERM trapped (handler)\n"); // UNSAFE
     logMessage("SIGTERM received");
-    // TODO might need to block SIGCHLD to stop it soiling graceful exit.
     killTelnet();
     exit(EXIT_SUCCESS);
     
-}//sigtermHandler
+}//END***************   sigtermHandler
 
-
-
-
-
+//************   lutkill()
 int lutkill(const char *pid_filename) {  // -k routine
     
     static FILE *pidfp;
@@ -140,7 +142,10 @@ int lutkill(const char *pid_filename) {  // -k routine
     return (EXIT_FAILURE); // if we get here its proper broke
     
 }
+//END************   lutkill
 
+
+//************   killTelnet()
 void killTelnet(){
     
     int status;
@@ -155,13 +160,61 @@ void killTelnet(){
     }else{                          // re-thread telnet
         if(flag.debug) fprintf(stderr,"killTelnet: telnet not running\n");
         pthread_kill(lutron_tid2,SIGTERM);  // kill lutron_tid2, the thread that
-        // forked telnet
-        // when lutron_tid2 dies, lutron_tid will start another one
+        // forked telnet. When lutron_tid2 dies, lutron_tid will start another one
         
-        if(flag.debug) fprintf(stderr,"main2:Lutron thread killed successfully\n");
+        if(flag.debug) fprintf(stderr,"killTelnet: Lutron thread killed successfully\n");
         // TODO .. we don't know this for sure as we havn't tested the
         // return value of pthread_kill
     }
     
 }
+//END************   killTelnet
 
+//************   signals_thread()
+void* signals_thread(void *arg){
+    
+    struct sigaction saCHLD,saHUP,saTERM;
+    
+    sigset_t set;
+    
+    sigemptyset(&set);
+    sigaddset(&set, SIGCHLD);
+    sigaddset(&set, SIGHUP);
+    sigaddset(&set, SIGTERM);
+    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
+    
+    //  Install SIGCHLD handler
+    if(flag.debug)fprintf(stderr,"Loading SIGCHLD handler\n");
+    sigemptyset(&saCHLD.sa_mask);
+    saCHLD.sa_flags = SA_RESTART;
+    saCHLD.sa_handler = sigchldHandler;
+    if (sigaction(SIGCHLD, &saCHLD, NULL) == -1){
+        error("Error loading SIGCHLD signal handler");
+    }//if
+    
+    //  Install SIGHUP handler
+    if(flag.debug)fprintf(stderr,"Loading SIGHUP handler\n");
+    sigemptyset(&saHUP.sa_mask);
+    saHUP.sa_flags = SA_RESTART ;
+    saHUP.sa_handler = sighupHandler;
+    if (sigaction(SIGHUP, &saHUP, NULL) == -1){
+        error("Error loading HUP signal handler");
+    }//if
+    
+    //  Install SIGTERM handler
+    if(flag.debug)fprintf(stderr,"Loading SIGTERM handler\n");
+    sigemptyset(&saTERM.sa_mask);
+    saTERM.sa_flags = SA_RESTART ;
+    saTERM.sa_handler = sigtermHandler;
+    if (sigaction(SIGTERM, &saTERM, NULL) == -1){
+        error("Error loading TERM signal handler");
+    }//if
+    
+//***************** MAIN LOOP
+    while(true){ // just suspend awaiting signals
+        
+        sigsuspend(&set);
+        
+    }
+}
+//END*********** signals_thread

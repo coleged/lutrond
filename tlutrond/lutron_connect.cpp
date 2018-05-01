@@ -35,15 +35,10 @@ void* lutron_doit(void *);
 void* lutron_connection(void *arg){
     
     sigset_t set;
-    
-    // I do this here and any sub thread created will inherit the signal
-    // mask
     sigemptyset(&set);
-    sigaddset(&set, SIGHUP);
     sigaddset(&set, SIGCHLD);
-    sigaddset(&set, SIGTERM);
+    pthread_sigmask(SIG_UNBLOCK, &set, NULL);
     
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
     // perpetually respawn Luton Connection threads.
     
     while( true ){

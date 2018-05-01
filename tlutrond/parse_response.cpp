@@ -46,17 +46,76 @@ std::string types[_NO_OF_TYPES] = {
     "sequences"             //17
 };
 
-void runScript(char *path){
+int runScript(char *cmd){
     
-    logMessage("Runscript: %s", path);
-    system(path);
+    // I have lifted this replacement for the system() function, with some minor edits
+    // from the book "Advanced Programming in the UNIX Environment" (fig 10.28) as it
+    // seems to handle SIGCHLD better than the library call which was causing issues
+    // with our SIGCHLD handler semantics. These, I believe are rooted in doing this in
+    // threaded code, but havn't investigated thuroughly in the spirit of not trying to
+    // fix something that isn't broken, or at least doesn't seem to be broken ;-)
     
-    // TODO. SIGCHLD is blocked while system() call runs...
-    // but this looks like it's just for this thread as the main thread
-    // catches a SIGCHLD and kills the lutron connection as it should!!!
+    pid_t                   pid;
+    int                     status;
+    struct sigaction        ignore, saveintr, savequit;
+    sigset_t                chldmask, savemask;
     
+    if (cmd == NULL)
+        return(EXIT_FAILURE);
+    flag.sigchld_ignore = true;
+    
+    logMessage("Runscript: %s", cmd);
+    
+    ignore.sa_handler = SIG_IGN;    /* ignore SIGINT and SIGQUIT */
+    sigemptyset(&ignore.sa_mask);
+    ignore.sa_flags = 0;
+    if (sigaction(SIGINT, &ignore, &saveintr) < 0)
+        return(EXIT_FAILURE);
+    if (sigaction(SIGQUIT, &ignore, &savequit) < 0)
+        return(EXIT_FAILURE);
+    sigemptyset(&chldmask);            /* now block SIGCHLD */
+    sigaddset(&chldmask, SIGCHLD);
+    if (pthread_sigmask(SIG_BLOCK, &chldmask, &savemask) < 0)
+        return(EXIT_FAILURE);
+    
+    if ((pid = fork()) < 0) {
+        status = EXIT_FAILURE;    /* probably out of processes */
+    } else if (pid == 0) {            /* child */
+        /* restore previous signal actions & reset signal mask */
+        sigaction(SIGINT, &saveintr, NULL);
+        sigaction(SIGQUIT, &savequit, NULL);
+        pthread_sigmask(SIG_SETMASK, &savemask, NULL);
+        
+        execl("/bin/sh", "sh", "-c", cmd, (char *)0);
+        _exit(127);        /* exec error */
+    } else {                        /* parent */
+        while (waitpid(pid, &status, 0) < 0)
+            if (errno != EINTR) {
+                status = EXIT_FAILURE; /* error other than EINTR from waitpid() */
+                break;
+            }
+    }
+    
+    /* restore previous signal actions & reset signal mask */
+    if (sigaction(SIGINT, &saveintr, NULL) < 0)
+        return(EXIT_FAILURE);
+    if (sigaction(SIGQUIT, &savequit, NULL) < 0)
+        return(EXIT_FAILURE);
+    if (pthread_sigmask(SIG_SETMASK, &savemask, NULL) < 0)
+        return(EXIT_FAILURE);
+    
+    return(status); // which is the return code from the script
 }
 
+
+/*********** Version using system()
+void runScript(char *cmd){
+ 
+    logMessage("Runscript: %s", cmd);
+    system(cmd);   // run the script
+    
+}
+***********/
 
 //************   parse_response
 void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
@@ -77,6 +136,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     int n;
     int found;
     static int tx_count = 0;  // transaction count TODO ditto above w/ threads
+    char *script; // pointer to string containing script to fork
     
     bzero(line,BUFFERSZ);
     memcpy(line,pb,strlen(pb));
@@ -168,7 +228,14 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             }// if !found
                         }//if
                         if(device[dev].comp[n].type==9){ // SCRIPT
-                            runScript(device[dev].comp[n].comp); // the path to script
+                            // device[dev].comp[n].comp is the script
+                            // arg2 is the parameter to pass
+                            script = (char *)malloc((int)strlen(device[dev].comp[n].comp)
+                                            + (int)strlen(arg2)
+                                            +2);     // +2 cos space separator an \0
+                            sprintf(script,"%s %s",device[dev].comp[n].comp,arg2);
+                            runScript(script);
+                            free(script);
                         }
                     }// if ~DEVICE
                     

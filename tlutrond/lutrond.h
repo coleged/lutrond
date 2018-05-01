@@ -107,6 +107,7 @@ typedef struct{
     bool dump;
     bool kill;
     bool port;
+    bool sigchld_ignore;
 }flags_t;
 
 typedef struct{
@@ -185,4 +186,5 @@ void dump_db();
 void keepAlive();
 void usageError(const char *);
 void killTelnet();
+void* signals_thread(void *);
 /**********************  END END END ***********************************/
