@@ -177,18 +177,20 @@ char **strarg(char *str){ // takes a string of whitespace separated tokens
     // to strings will last element a NULL pointer
     
     int len = (int)strlen(str);
-    char *line;   // pointer to working buffer for strtok
+    char *line;   // pointer to working buffer for strtok_r
+    char *ptr = nullptr;
     int n = 0;
     
-    line = (char *)malloc(len * sizeof(char));    // create working buffer
+    
+    line = (char *)malloc((len+1) * sizeof(char));    // create working buffer
     // create array of pointers to strings with
     // two element args[0] and argv[1]
-    char** args = (char **)malloc( (n+2) * sizeof(char*));
+    static char** args = (char **)malloc( (n+2) * sizeof(char*));
     memcpy(line,str,len);          // copy string into working buffer
-    args[n] = strtok(line,"\t ");  // break out first token
+    args[n] = strtok_r(line,"\t ",&ptr);  // break out first token
     ++n;
     
-    while((args[n] = strtok(NULL,"\t ")) != NULL){
+    while((args[n] = strtok_r(NULL,"\t ",&ptr)) != nullptr){
         // scan for more tokens growing pointer array
         ++n;
         args = (char **)realloc(args, (n+2) * sizeof(char*));

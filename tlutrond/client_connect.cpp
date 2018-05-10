@@ -49,22 +49,25 @@ char *getString(){     // uses a static index (i) to return
 }
 //END*****************getString()
 
-//*****************pushq()
-int pushq(std::string arg) // pushes string onto queue
-{
-    if(flag.debug)fprintf(stderr,"pushing %s\n",arg.c_str());
-    pthread_mutex_lock(&mq->mu_queue);    // lock the queue via the pointer
-    mq->msg_queue.push(arg);              // push the string onto queue
-    pthread_mutex_unlock(&mq->mu_queue);  // unlock the queue
-    pthread_cond_signal(&mq->cond);       // signal any thread waiting on
+
+//********************writePipe()
+int writePipe(char *msg){
+    
+    int len = (int)strlen(msg);
+    
+    if (write (pfd[1], msg,len) != len){
+        perror ("write");
+        return(EXIT_FAILURE);
+    }
     return(EXIT_SUCCESS);
 }
-//END*****************pushq()
+//END******************writePipe()
 
 //*****************keepAlive()
 void keepAlive()
 {
-        pushq(getString());
+    if(flag.debug)printf("\n");
+        writePipe(getString());
 }
 //END*****************keepAlive()
 
@@ -72,7 +75,6 @@ void keepAlive()
 void* client_listen(void *arg){
     
     int optval=1;
-    std::string msg;
     fd_set read_fd;
     fd_set write_fd;
     fd_set except_fd;
@@ -134,7 +136,7 @@ void* client_listen(void *arg){
                 break; // bind loop, go re-establish listening socket
             }
             listener.connected = true;
-            if(flag.debug) printf("Accept connection (active socket FD= %i)\n",
+            if(flag.debug) printf("\nAccept connection (active socket FD= %i)\n",
                                  listener.actsockfd);
             
             cli_socklen = sizeof(cli_addr);
@@ -161,8 +163,7 @@ void* client_listen(void *arg){
                                                soc_buffer,BUFFERSZ)) > 0 ){
                         write(listener.actsockfd,"thanks\n",7); // client waits for ack
                         if(flag.debug) printf("%s\n",soc_buffer);
-                        msg = soc_buffer;
-                        pushq(msg);
+                        writePipe(soc_buffer);
                     } // while Readline
                     if(flag.debug) printf("Done reading client\n");
                     close(listener.actsockfd);

@@ -16,20 +16,35 @@
  
  lutrond V4.0 April 2018
  
- lutron_connection() lutron_doit()
+ lutron_connection() lutron_doit() readPipe()
  
  ***********/
 
 
 #include "lutrond.h"
 #include "externals.h"
-#define __SELECT_TIMEOUT 1
+#define __SELECT_TIMEOUT 120
 
 char lutron_buff[BUFFERSZ];
 int lutron_buff_sz = sizeof(lutron_buff);
 int l_bytes;
 
 void* lutron_doit(void *);
+
+
+//************* readPipe()
+int readPipe(char *buffer,int buff_sz){
+    
+    int nread;
+    
+    if((nread = (int)read(pfd[0],buffer,buff_sz)) < 0){
+        return(EXIT_FAILURE);
+    }
+    return (nread);
+    
+}
+//END*************readPipe()
+
 
 //************* lutron_connection()
 void* lutron_connection(void *arg){
@@ -63,6 +78,9 @@ void* lutron_doit(void *arg){
     fd_set except_fd;
     std::string str;
     struct timeval tv = {__SELECT_TIMEOUT, 0};
+    char p_buffer[PIPE_BUFFER];
+    int p_buffer_sz = PIPE_BUFFER;
+    int l_bytes,p_bytes;
     
     
     if(flag.dump){
@@ -146,43 +164,40 @@ void* lutron_doit(void *arg){
                 // NOW LOGGED ON
         
             if(flag.debug) fprintf(stderr,"Connected to Lutron\n");
+        
+            // monitor pipe and lutron
             while(flag.connected){
-                if(!mq->msg_queue.empty()){               // if queue not empty
-                    pthread_mutex_lock(&mq->mu_queue);       // lock queue
-                    str = mq->msg_queue.front();         // read string
-                    mq->msg_queue.pop();                 // and pop it
-                    pthread_mutex_unlock(&mq->mu_queue); // unlock queue
-                    pthread_cond_signal(&mq->cond);      // sig any blocked threads
-                    write(lutron.fd,str.c_str(),strlen(str.c_str()));
-                    write(lutron.fd,"\r\n",2);
-                }// if !empty()
                 FD_ZERO(&read_fd);
                 FD_ZERO(&write_fd);
                 FD_ZERO(&except_fd);
+                FD_SET(pfd[0], &read_fd);
                 FD_SET(lutron.fd, &read_fd);
-                FD_SET(lutron.fd, &read_fd);
-                select(lutron.fd+1, &read_fd, &write_fd, &except_fd, &tv);
-                if(FD_ISSET(lutron.fd, &read_fd)){
-                    bzero(lutron_buff,lutron_buff_sz);
-                    l_bytes=(int)read(lutron.fd,&lutron_buff,lutron_buff_sz);
-                    parse_response((char *)"LC>>",lutron_buff);
-                }//if ISSET lutron
+                select(lutron.fd+1, &read_fd, nullptr, nullptr, nullptr);
+                    if(FD_ISSET(lutron.fd, &read_fd)){
+                        bzero(lutron_buff,lutron_buff_sz);
+                        l_bytes=(int)read(lutron.fd,&lutron_buff,lutron_buff_sz);
+                        if(flag.debug)printf("\n");
+                        parse_response((char *)"LC>>",lutron_buff);
+                    }//if ISSET lutron
+                    if(FD_ISSET(pfd[0], &read_fd)){
+                        p_bytes = readPipe(p_buffer,p_buffer_sz);
+                        write(lutron.fd,p_buffer,p_bytes);
+                        write(lutron.fd,"\r\n",2);
+                    }
             }//while flag.connected
         
     }else{ // test mode code here ......
         printf("No Lutron Connection: TEST MODE\n");
         while(true){
-            
-            if(!mq->msg_queue.empty())               // if queue not empty
-            {
-                pthread_mutex_lock(&mq->mu_queue);       // lock queue
-                str = mq->msg_queue.front();        // read string off queue
-                mq->msg_queue.pop();                // and pop it
-                pthread_mutex_unlock(&mq->mu_queue);    // unlock queue
-                pthread_cond_signal(&mq->cond);         // sig any blocked threads
-                printf("%s",str.c_str());         // print it
-            }// if !empty()
-            usleep(10000);
+            FD_ZERO(&read_fd);
+            FD_ZERO(&write_fd);
+            FD_ZERO(&except_fd);
+            FD_SET(pfd[0], &read_fd);
+            select(pfd[0]+1, &read_fd, nullptr, nullptr, nullptr);
+                if(FD_ISSET(pfd[0], &read_fd)){
+                    p_bytes = readPipe(p_buffer,p_buffer_sz);
+                    printf("%s",p_buffer);
+                }
         }
     }
     if(flag.debug)fprintf(stderr,"lutron_doit: thread terminating\n");

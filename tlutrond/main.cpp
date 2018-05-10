@@ -62,10 +62,12 @@ lutron_t lutron ={
     
 };
 
+/*   NOT USING
 // the message queue is used to pass command messages between the thread that listens
 // for client connections to the thread with telnet session to the Lutron
 MessageQueue_t queue;                   // create in instance of a queue
 MessageQueue_t *mq = &queue;            // and a pointer to this queue
+*/
 
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
@@ -77,6 +79,8 @@ pthread_t   lutron_tid,     // controlling lutron thread - perpetually creates l
             lutron_tid2,    // Lutron session. Forks a telnet session using pty and transacts
                             // commands off the queue.
             sig_tid;        // signal handling thread
+
+int pfd[2];                // pipe for inter thread communications
 
 /**********************************************************************
           MAIN
@@ -173,6 +177,15 @@ int main(int argc, const char *argv[]) {
         fprintf(stderr,"log_file = %s\n",admin.log_file);
         fprintf(stderr,"conf_file = %s\n",admin.conf_file);
     }
+    
+    // create pipe for inter-thread messages
+    
+    
+    if (pipe(pfd) < 0){
+        logMessage("main():failed to create pipe");
+        exit(EXIT_FAILURE);
+    }
+    if(flag.debug)printf("created pipe pfd[0](read)=%i / pfd[1](write)=%i\n",pfd[0],pfd[1]);
    
     // signal handling thread - this inherits default sigmask
     thread_error = pthread_create(&sig_tid, NULL, &signals_thread, NULL);
@@ -216,12 +229,12 @@ int main(int argc, const char *argv[]) {
     
     dump_db();
     // Main thread now loops and monitors
-    usleep(10000000); // give the worker threads some time to set up socket & connection
+    usleep(1E4); // give the worker threads some time to set up socket & connection
     
     i=0;            // watchdog loop counter
     while(true){
-        usleep(10000000);
-        //if(flag.debug)fprintf(stderr,"[%i]main:ping\n",i);
+        usleep(1E7);
+        if(flag.debug)fprintf(stderr,".");
         ++i;
         if( i % 10 == 0 ) keepAlive(); // tickle the queue every 10 loops
         if( i > 500 ){

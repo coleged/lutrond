@@ -22,7 +22,7 @@ lutrond V4.0 April 2018
 
 
 #include <iostream>
-#include <queue>
+// #include <queue>  NOT USING
 #include <cstdlib>
 #include <unistd.h>
 #include <mutex>
@@ -72,7 +72,8 @@ lutrond V4.0 April 2018
 #define BUFFERSZ 4096    	// buffer for IPC - big because we dont
 				// do any significant flow control
 #define NO_OF_DEVICES 256	// Lutron devices
-#define NO_OF_COMPS 32		// Components per device
+#define NO_OF_COMPS 32		// max # of Components per device
+#define PIPE_BUFFER 4096
 
 // defaults. Some of these can be overridden in the lutrond.conf file (*)
 // or via command line option flags (+)
@@ -152,13 +153,14 @@ typedef struct {
            } comp[NO_OF_COMPS]; //  1 to NO_OF_COMPS-1 (ignore 0)
        } lut_dev_t;
 
+/* NOT USING
 struct MessageQueue_t                 // define a queue struct for strings
 {
     std::queue<std::string> msg_queue;
     pthread_mutex_t mu_queue;
     pthread_cond_t cond;
 };
-
+*/
 
 
 // function prototypes
