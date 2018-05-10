@@ -312,7 +312,7 @@ void* signals_thread(void *arg){
     while(true){ // just suspend awaiting signals
         
         sigsuspend(&set);
-        printf("out of suspend\n");
+        if(flag.debug)printf("out of suspend\n");
         
     }
 }

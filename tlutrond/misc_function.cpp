@@ -49,8 +49,6 @@ logMessage(const char *format, ...)
     struct tm *loc;
     char line[256];
     
-    
-    
     t = time(NULL);
     loc = localtime(&t);
     if (  loc == NULL ||
@@ -177,7 +175,7 @@ char **strarg(char *str){ // takes a string of whitespace separated tokens
     // to strings will last element a NULL pointer
     
     int len = (int)strlen(str);
-    char *line;   // pointer to working buffer for strtok_r
+    static char *line;   // pointer to working buffer for strtok_r
     char *ptr = nullptr;
     int n = 0;
     

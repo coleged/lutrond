@@ -16,7 +16,6 @@
 		B942FEE4208A4EE1004B7CF9 /* libconfig++.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B942FEE3208A4EE1004B7CF9 /* libconfig++.a */; };
 		B942FEE6208A8957004B7CF9 /* misc_function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B942FEE5208A8957004B7CF9 /* misc_function.cpp */; };
 		B946ECDB209BAFF300D13EA7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B946ECDA209BAFF300D13EA7 /* main.cpp */; };
-		B946ECE1209BB03700D13EA7 /* lutctrl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B946ECDF209BB03700D13EA7 /* lutctrl.cpp */; };
 		B95D7ECC208C82F200EC8041 /* readline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECB208C82F200EC8041 /* readline.cpp */; };
 		B95D7ECE208CAFEA00EC8041 /* parse_response.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */; };
 		B95D7ED0208CB5A800EC8041 /* database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B95D7ECF208CB5A800EC8041 /* database.cpp */; };
@@ -66,8 +65,6 @@
 		B942FEE5208A8957004B7CF9 /* misc_function.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = misc_function.cpp; sourceTree = "<group>"; };
 		B946ECD8209BAFF300D13EA7 /* lutctrl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lutctrl; sourceTree = BUILT_PRODUCTS_DIR; };
 		B946ECDA209BAFF300D13EA7 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		B946ECDF209BB03700D13EA7 /* lutctrl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lutctrl.cpp; sourceTree = "<group>"; };
-		B946ECE0209BB03700D13EA7 /* lutctrl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = lutctrl.hpp; sourceTree = "<group>"; };
 		B95D7ECB208C82F200EC8041 /* readline.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = readline.cpp; sourceTree = "<group>"; };
 		B95D7ECD208CAFEA00EC8041 /* parse_response.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = parse_response.cpp; sourceTree = "<group>"; };
 		B95D7ECF208CB5A800EC8041 /* database.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = database.cpp; sourceTree = "<group>"; };
@@ -140,8 +137,6 @@
 				B95D7ED4208D27A800EC8041 /* writen.cpp */,
 				B95D7ECB208C82F200EC8041 /* readline.cpp */,
 				B942FED22088D28D004B7CF9 /* lutron_connect.cpp */,
-				B946ECDF209BB03700D13EA7 /* lutctrl.cpp */,
-				B946ECE0209BB03700D13EA7 /* lutctrl.hpp */,
 			);
 			path = tlutrond;
 			sourceTree = "<group>";
@@ -259,7 +254,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B946ECE1209BB03700D13EA7 /* lutctrl.cpp in Sources */,
 				B946ECDB209BAFF300D13EA7 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

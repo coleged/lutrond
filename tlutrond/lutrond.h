@@ -22,7 +22,6 @@ lutrond V4.0 April 2018
 
 
 #include <iostream>
-// #include <queue>  NOT USING
 #include <cstdlib>
 #include <unistd.h>
 #include <mutex>
@@ -35,7 +34,7 @@ lutrond V4.0 April 2018
 #include <ctype.h>
 #include <sys/socket.h>
 
-#ifdef MAC_OS10		// Mac OS doesn't have pty.h and header search path is broken
+#ifdef MAC_OS10		    // Mac OS doesn't have pty.h and header search path is broken
 #include <util.h>
 #include "/usr/local/include/libconfig.h"
 #else
@@ -70,19 +69,21 @@ lutrond V4.0 April 2018
 #define FALSE	0
 
 #define BUFFERSZ 4096    	// buffer for IPC - big because we dont
-				// do any significant flow control
-#define NO_OF_DEVICES 256	// Lutron devices
-#define NO_OF_COMPS 32		// max # of Components per device
+				            // do any significant flow control
 #define PIPE_BUFFER 4096
 
-// defaults. Some of these can be overridden in the lutrond.conf file (*)
-// or via command line option flags (+)
+#define NO_OF_DEVICES 256	// max # of Lutron devices
+#define NO_OF_COMPS 32		// max # of Components per device
+
+
+// defaults. Some of these can be overridden in the lutrond.conf file   (*)
+// or via command line option flags                                     (+)
 #define LUTRON_HOST "lutron1.rainbow-futures.com"       // *+
-#define LUTRON_PORT "23"				// *
-#define LUTRON_USER "lutron"				// *
-#define LUTRON_PASS "integration"			// *
+#define LUTRON_PORT "23"				                // *
+#define LUTRON_USER "lutron"				            // *
+#define LUTRON_PASS "integration"			            // *
 #define SYSLOG_IDENT    "lutrond"
-#define LOG_FILE_NAME   "/tmp/lutrond.log"		// *
+#define LOG_FILE_NAME   "/tmp/lutrond.log"		        // *
 #define DB_FILE_NAME	"/tmp/lutrond.db"
 #define PID_FILE_NAME   "/tmp/lutrond.pid"
 
@@ -95,7 +96,7 @@ lutrond V4.0 April 2018
 #define SYSLOG_OPT (LOG_PID | LOG_NDELAY | LOG_NOWAIT)
 #define SYSLOG_FACILITY LOG_LOCAL7
 #define CONFIG_FILE     "/usr/local/etc/lutrond.conf"	// +
-#define DEFAULT_PORT    4534
+#define DEFAULT_PORT    4534                            // *+
 #define SOC_BL_QUEUE    5
 #define TS_BUF_SIZE     sizeof("YYYY-MM-DD HH:MM:SS")
 
@@ -152,16 +153,6 @@ typedef struct {
             int value;   // state, i.e. 0 for off/disable, 100 for 100% on etc
            } comp[NO_OF_COMPS]; //  1 to NO_OF_COMPS-1 (ignore 0)
        } lut_dev_t;
-
-/* NOT USING
-struct MessageQueue_t                 // define a queue struct for strings
-{
-    std::queue<std::string> msg_queue;
-    pthread_mutex_t mu_queue;
-    pthread_cond_t cond;
-};
-*/
-
 
 // function prototypes
 void logMessage(const char *format, ...);
