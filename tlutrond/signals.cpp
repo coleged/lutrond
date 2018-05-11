@@ -201,10 +201,10 @@ int lutkill(const char *pid_filename) {  // -k routine
         if (kill(pid, SIGHUP) == -1) {
             return (EXIT_FAILURE);
         }
-        
+        if(flag.debug)fprintf(stderr,"lutkill(): HUP sent to running lutrond process\n");
         return (EXIT_SUCCESS);
     }// no such process so we should exec another
-    
+    if(flag.debug)fprintf(stderr,"lutkill(): No lutrond process found. Restarting .... \n");
     // exec a new lutrond.
     
     // convert string version of command line to array of pointers to strings
@@ -225,8 +225,8 @@ int lutkill(const char *pid_filename) {  // -k routine
     
     // exec failed!
     
-    logMessage("lutrond -k failed to exec process");
-    if(flag.debug)printf("lutrond -k failed to exec process");
+    logMessage("lutkill() -k failed to exec new process");
+    if(flag.debug)fprintf(stderr,"lutkill() failed to exec new process");
     return (EXIT_FAILURE); // if we get here its proper broke
     
 }
@@ -243,10 +243,11 @@ void killTelnet(){
         // raise a SIGCHLD, which will cause
         // lutron_tid2 to end and be recreated by
         // lutron_tid
-        if(flag.debug) fprintf(stderr,"killTelnet: SIGTERM sent to telnet\n");
+        if(flag.debug) fprintf(stderr,"killTelnet(): SIGTERM sent to telnet\n");
         waitpid(telnet_pid, &status, WNOHANG);
     }else{                          // re-thread telnet
-        if(flag.debug) fprintf(stderr,"killTelnet: telnet not running\n");
+        if(flag.debug) fprintf(stderr,"killTelnet(): telnet not running\n");
+        if(flag.debug) fprintf(stderr,"killTelnet(): kill/restart connection thread\n");
         pthread_kill(lutron_tid2,SIGTERM);  // kill lutron_tid2, the thread that
         // forked telnet. When lutron_tid2 dies, lutron_tid will start another one
         

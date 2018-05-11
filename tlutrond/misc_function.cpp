@@ -181,10 +181,11 @@ char **strarg(char *str){ // takes a string of whitespace separated tokens
     
     
     line = (char *)malloc((len+1) * sizeof(char));    // create working buffer
+    bzero(line, len+1);
+    memcpy(line,str,len);          // copy string into working buffer
     // create array of pointers to strings with
     // two element args[0] and argv[1]
     static char** args = (char **)malloc( (n+2) * sizeof(char*));
-    memcpy(line,str,len);          // copy string into working buffer
     args[n] = strtok_r(line,"\t ",&ptr);  // break out first token
     ++n;
     

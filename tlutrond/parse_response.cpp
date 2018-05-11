@@ -133,7 +133,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     int inform = 0;
     int component,action;
     char *param;
-    int n;
+    int n,a;
     int found;
     static int tx_count = 0;  // transaction count TODO ditto above w/ threads
     char *script; // pointer to string containing script to fork
@@ -161,16 +161,67 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                 arg1 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
                 
                 arg2 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
-                
-                logMessage("[%i]%s:%s:%s(%s,%i,%s,%s)",
-                           tx_count,
-                           pre,
-                           device[dev].name,
-                           device[dev].location,
-                           cmd,
-                           dev,
-                           arg1,
-                           arg2);
+                switch (tok[1]){
+                    case 'O':  // OUTPUT COMMAND
+                        logMessage("[%i]%s:%s:%s(%s,%i,%s,%s)",
+                                    tx_count,
+                                    pre,
+                                    device[dev].name,
+                                    device[dev].location,
+                                    cmd,
+                                    dev,
+                                    arg1,
+                                    arg2);
+                    break;
+                        
+                    case 'D':  // Device COMMAND arg1 is the component field
+                        n=1; a=atoi(arg1);found=false;
+                        while(device[dev].comp[n].num != 0){
+                            if(device[dev].comp[n].num == a){
+                                found=true;
+                                // comp[n] is the component
+                                // logMessage("DATABASE HIT (DEVICE)");
+                                break;
+                            }//if
+                            ++n;
+                        }//while
+                        if(found){
+                            logMessage("[%i]%s:%s:%s[%s](%s,%i,%s,%s)",
+                                       tx_count,
+                                       pre,
+                                       device[dev].name,
+                                       device[dev].location,
+                                       device[dev].comp[n].name,
+                                       cmd,
+                                       dev,
+                                       arg1,
+                                       arg2);
+                        }else{
+                              logMessage("[%i]%s:%s:%s(%s,%i,%s,%s)",
+                                   tx_count,
+                                   pre,
+                                   device[dev].name,
+                                   device[dev].location,
+                                   cmd,
+                                   dev,
+                                   arg1,
+                                   arg2);
+                        }// else
+                    break;
+                        
+                    default:
+                                logMessage("[%i]%s:%s:%s(%s,%i,%s,%s)",
+                                           tx_count,
+                                           pre,
+                                           device[dev].name,
+                                           device[dev].location,
+                                           cmd,
+                                           dev,
+                                           arg1,
+                                           arg2);
+                     break;
+                }//switch tok[1]
+                    
                 if (inform){
                     if (tok[1] == 'O'){ //~OUTPUT
                         action = atoi(arg1);

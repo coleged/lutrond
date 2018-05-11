@@ -62,12 +62,6 @@ lutron_t lutron ={
     
 };
 
-/*   NOT USING
-// the message queue is used to pass command messages between the thread that listens
-// for client connections to the thread with telnet session to the Lutron
-MessageQueue_t queue;                   // create in instance of a queue
-MessageQueue_t *mq = &queue;            // and a pointer to this queue
-*/
 
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
@@ -180,14 +174,13 @@ int main(int argc, const char *argv[]) {
     
     // create pipe for inter-thread messages
     
-    
     if (pipe(pfd) < 0){
         logMessage("main():failed to create pipe");
         exit(EXIT_FAILURE);
     }
-    if(flag.debug)printf("created pipe pfd[0](read)=%i / pfd[1](write)=%i\n",pfd[0],pfd[1]);
+    if(flag.debug)fprintf(stderr,"created pipe pfd[0](read)=%i / pfd[1](write)=%i\n",pfd[0],pfd[1]);
    
-    // signal handling thread - this inherits default sigmask
+    // signal handling thread
     thread_error = pthread_create(&sig_tid, NULL, &signals_thread, NULL);
     if (thread_error != 0){
         logMessage("Signals thread creation failure :[%s]",strerror(thread_error));
@@ -196,18 +189,7 @@ int main(int argc, const char *argv[]) {
         if(flag.debug) fprintf(stderr,"main1:Signals thread created successfully\n");
     }
     
-    // TODO: revisit signals and telnet connection maintenance.
-    // I did try setting a pthread_sigmask here to better manage the masks of the
-    // spawned threads below, but got into a tangled maze, and couldn't get SIGHUP
-    // and SIGCHLD to both work as required, so used a bit of brute force with the
-    // flag.ignore_chld flag. Issue I needed to deal with was the SIGCHLD raised when
-    // the script spawned a was being caught as the death of telnet and a new connection
-    // inititated. An ugly, but non critical side effect, that I don't want.
-    //
-    // It might be that the join/wait on the telnet connect thread is all that is required
-    // and I don't need a SIGCHLD handler at all.
-    
-    // create the worker threads
+    // worker threads
     
     // socket listener thread
     thread_error = pthread_create(&client_tid, NULL, &client_listen, NULL);
@@ -227,21 +209,23 @@ int main(int argc, const char *argv[]) {
         if(flag.debug) fprintf(stderr,"Main1:Lutron thread created successfully\n");
     }
     
+    // main thread
+    
     dump_db();
-    // Main thread now loops and monitors
+    // Main thread just loops, sending keep alives and doing reset/connect
     usleep(1E4); // give the worker threads some time to set up socket & connection
     
     i=0;            // watchdog loop counter
     while(true){
-        usleep(1E7);
+        usleep(1E7); // zzzzzzzzzzz
         if(flag.debug)fprintf(stderr,".");
         ++i;
-        if( i % 10 == 0 ) keepAlive(); // tickle the queue every 10 loops
-        if( i > 500 ){
+        if( i % 10 == 0 ) keepAlive();  // tickle lutron every 10 loops
+        if( i > 500 ){                  // dump and reconnect every 500
             dump_db();                      // dump the database
             killTelnet();                   // and kill the telnet process
             i=0;
-        }//if (i > 50)
+        }//if
     }//while true
    // NEVER REACHED
 }
