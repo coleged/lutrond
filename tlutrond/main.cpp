@@ -24,21 +24,21 @@
 #include "lutrond.h"
 
 // Type defs and structs defined in lutrond.h
+// Global variable declarations (these are exported by inclusion in externals.h)
 
-// Global variable declarations (these should be exported by inclusion in externals.h)
-
-flags_t flag = {
+flags_t flag = {                    // flag.<var>
                     false,          // daemon
-                    _DEBUG,         //debug
+                    _DEBUG,         // debug
                     _TEST_MODE,     // test
                     false,          // connected
                     false,          // dump
                     false,          // kill
-                    false,           // port
+                    false,          // port
                     false           // sigchld_ignore
 };
 
-daemon_t admin = {  0,                          // pid
+daemon_t admin = {                              // admin.<var>
+                    0,                          // pid
                     (char *)CONFIG_FILE,        // conf_file
                     (char *)LOG_FILE_NAME,      // log_file
                     (char *)PID_FILE_NAME,      // pid_file
@@ -46,14 +46,14 @@ daemon_t admin = {  0,                          // pid
                     NULL                        // logfp
 };
 
-client_t listener = {
+client_t listener = {                           // listner.<var>
                     DEFAULT_PORT,               //port
                     0,                          //sockfd
                     0,                          //actsockfd
                     0                           //connected
 };
 
-lutron_t lutron ={
+lutron_t lutron ={                           // lutron.<var>
                     (char *)LUTRON_HOST,     // host        lutron hostname
                     (char *)LUTRON_PORT,     // lport       telnet port number
                     (char *)LUTRON_USER,     // user        Lutron UID
@@ -62,16 +62,15 @@ lutron_t lutron ={
     
 };
 
-
 lut_dev_t device[NO_OF_DEVICES];        // database of Lutron devices
 
 pid_t telnet_pid;
 
 pthread_t   lutron_tid,     // controlling lutron thread - perpetually creates lutron_tid2's
             client_tid,     // socket listening thread. Accepts connections, takes in commands
-                            // and pushes them to the message queue
+                            // and pushes them to the pipe
             lutron_tid2,    // Lutron session. Forks a telnet session using pty and transacts
-                            // commands off the queue.
+                            // commands found on in the pipe.
             sig_tid;        // signal handling thread
 
 int pfd[2];                // pipe for inter thread communications
@@ -93,7 +92,6 @@ int main(int argc, const char *argv[]) {
     //Parse command line options
     while ((opt = getopt(argc, (char **)argv, "Dkhvdtp:c:")) != -1){
         switch (opt){
-                
             case 'D': // run in debug mode. Use as first option to catch all in this
                 // switch block
                 flag.debug=true;
@@ -211,7 +209,9 @@ int main(int argc, const char *argv[]) {
     
     // main thread
     
-    dump_db();
+    if (!dump_db()){
+        logMessage("Failed to write database.... continuing anyway...");
+    };
     // Main thread just loops, sending keep alives and doing reset/connect
     usleep(1E4); // give the worker threads some time to set up socket & connection
     

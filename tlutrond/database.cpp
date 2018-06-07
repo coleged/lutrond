@@ -24,7 +24,7 @@
 #include "externals.h"
 
 //*************** dump_db()
-void
+int
 dump_db(){
     
     int i,j;
@@ -39,7 +39,8 @@ dump_db(){
     umask(m);
     
     if (dbfp == NULL){
-        logMessage("Unable to open database file");
+        logMessage("dump_db(): Unable to open database file %s",dbFilename);
+        return(EXIT_FAILURE);
     }
     
     for(i=1;i<NO_OF_DEVICES;i++){
@@ -65,6 +66,7 @@ dump_db(){
         }
     }//for i
     fclose(dbfp);
+    return(EXIT_SUCCESS);
     
     
     

@@ -53,7 +53,9 @@ int runScript(char *cmd){
     // seems to handle SIGCHLD better than the library call which was causing issues
     // with our SIGCHLD handler semantics. These, I believe are rooted in doing this in
     // threaded code, but havn't investigated thuroughly in the spirit of not trying to
-    // fix something that isn't broken, or at least doesn't seem to be broken ;-)
+    // fix something that isn't broken, or at least doesn't seem to be too broken ;-)
+    
+    // Now using simple flag to tell our SIGCHLD handler to ignore the signal. See below.
     
     pid_t                   pid;
     int                     status;
@@ -62,7 +64,13 @@ int runScript(char *cmd){
     
     if (cmd == NULL)
         return(EXIT_FAILURE);
-    flag.sigchld_ignore = true;
+    flag.sigchld_ignore = true; // a fudge. This flags my SIGCHLD handler, which is more concerned
+                                // with the death of telnet than this child process to ingore SIGCHLD
+                                // while this script runs. Not ideal mechanism. i.e. consider if the
+                                // script was to kill telnet ;-)
+    
+                                // The flag is reset to false by the handler, so we only ignore one
+                                // signal instance
     
     logMessage("Runscript: %s", cmd);
     
@@ -138,6 +146,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     static int tx_count = 0;  // transaction count TODO ditto above w/ threads
     char *script; // pointer to string containing script to fork
     
+    
     bzero(line,BUFFERSZ);
     memcpy(line,pb,strlen(pb));
     
@@ -157,10 +166,15 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
             case '#':
             case '?': --tx_count;   // Decrement counter
                 cmd = (tmp=strtok_r(tok,",",&ptr2)) == NULL ? undef : tmp ; // first token
-                dev = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? 999 : atoi(tmp); // device
+                dev = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? 0 : atoi(tmp); // device
                 arg1 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
                 
                 arg2 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
+                if(device[dev].name == NULL){ // we don't know about this device
+                    device[dev].name = undef;
+                    device[dev].location = undef;
+                    device[dev].type=0;
+                }
                 switch (tok[1]){
                     case 'O':  // OUTPUT COMMAND
                         logMessage("[%i]%s:%s:%s(%s,%i,%s,%s)",
@@ -242,7 +256,6 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                                 }
                         
                                 break;
-                                
                                 
                             default:
                                 strcpy(device[dev].state,param);

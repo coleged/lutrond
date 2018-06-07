@@ -66,7 +66,7 @@ int writePipe(char *msg){
 //*****************keepAlive()
 void keepAlive()
 {
-    if(flag.debug)printf("\n");
+    if(flag.debug)fprintf(stderr,"\n");
         writePipe(getString());
 }
 //END*****************keepAlive()

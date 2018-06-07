@@ -175,7 +175,7 @@ char *db_timestamp();
 void sigchldHandler(int);
 void sighupHandler(int);
 void sigtermHandler(int);
-void dump_db();
+int dump_db();
 void keepAlive();
 void usageError(const char *);
 void killTelnet();

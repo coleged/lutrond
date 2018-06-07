@@ -59,13 +59,12 @@ sigsegvHandler(int sig){
     void *array[10];
     size_t size;
     
-    if(flag.debug) printf("SIGSEGV trapped (handler)\n"); // UNSAFE
+    logMessage("SIGSEGV received");
     // get void*'s for all entries on the stack
     size = backtrace(array, 10);
     
-    // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, (int)size, STDERR_FILENO);
+    // print out all the frames to logfile
+    backtrace_symbols_fd(array, (int)size, fileno(admin.logfp));
     exit(1);
 }
 
@@ -175,6 +174,10 @@ sigtermHandler(int sig)
 //************   lutkill()
 int lutkill(const char *pid_filename) {  // -k routine
     
+    // send HUP to existing instance of lutrond. This will cause it to cycle the telnet session.
+    // if there is no existing instance, start one using the command line arguements left in the
+    // pid file by the last instance that ran
+    
     static FILE *pidfp;
     int pid;
     char command_line[CMD_LINE_LEN];
@@ -185,6 +188,7 @@ int lutkill(const char *pid_filename) {  // -k routine
     pidfp = fopen(pid_filename, "r");
     
     if (pidfp == NULL){
+        logMessage("lutkill(): failed to open pid file.......");
         return (EXIT_FAILURE);
     };
     
@@ -193,40 +197,44 @@ int lutkill(const char *pid_filename) {  // -k routine
     // Line 2: the command line used to invoke it
     
     if(fscanf(pidfp,"%d\n%[^\n]s",&pid,command_line) == -1){
+        logMessage("lutkill(): failed to parse pid file.......");
         return (EXIT_FAILURE);
     }
     if(flag.debug)printf("lutkill():%i %s\n",pid,command_line);
     if (getpgid(pid) >= 0){ // crafty way to see if process exists
         
         if (kill(pid, SIGHUP) == -1) {
+            logMessage("lutkill(): failed to send HUP to existing lutrond process [%i]",pid);
             return (EXIT_FAILURE);
         }
         if(flag.debug)fprintf(stderr,"lutkill(): HUP sent to running lutrond process\n");
         return (EXIT_SUCCESS);
-    }// no such process so we should exec another
-    if(flag.debug)fprintf(stderr,"lutkill(): No lutrond process found. Restarting .... \n");
-    // exec a new lutrond.
+    }
     
+    // no such process so we should exec another
+    
+    logMessage("lutkill(): no process found - restarting.......");
+    
+    // exec a new lutrond.
     // convert string version of command line to array of pointers to strings
     exec_args = strarg(command_line);
     // strip any path head off the first arg (as in argv[0])
-    //exec_args[0] = basename(exec_args[0]);
+    exec_args[0] = basename(exec_args[0]);
     if(flag.debug){
         for(int i=0;exec_args[i]!=NULL;++i){
-            printf("%s:",exec_args[i]);
+            fprintf(stderr,"%s ",exec_args[i]);
         }
-        printf("\n");
+        fprintf(stderr,"\n");
     }
     // We assume the process will daemonize per the -d
     // flag that will enevitably be found in command_line
-    // TODO a more complete solution would be to fork/exec/die
+    // TODO a more complete solution might be to fork/exec/die
     // to disconnect this instance as we respawn
     execvp("/usr/local/bin/lutrond",(char **)exec_args);
     
     // exec failed!
     
     logMessage("lutkill() -k failed to exec new process");
-    if(flag.debug)fprintf(stderr,"lutkill() failed to exec new process");
     return (EXIT_FAILURE); // if we get here its proper broke
     
 }

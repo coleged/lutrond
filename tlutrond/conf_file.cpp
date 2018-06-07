@@ -83,7 +83,7 @@ readConfFile( char *path)    // requires libconfig (libconfig.h & -lconfig)
             /*Read the string*/
             if (config_setting_lookup_string(setting, "name", &value)){
                 device[i].name=(char *)value;
-            }else{
+            }else{ // device not configured
                 device[i].name=NULL;
             } // if else
             if (config_setting_lookup_int(setting, "type", &ivalue)){
