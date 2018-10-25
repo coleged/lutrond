@@ -63,7 +63,7 @@ lutrond V4.0 April 2018
 
 
 #define MY_NAME "lutrond"
-#define VERSION "4.0.1b"    // adding SYSVAR support
+#define VERSION "4.0.2"    // adding SYSVAR support
 
 #define TRUE	1
 #define FALSE	0
@@ -84,6 +84,9 @@ lutrond V4.0 April 2018
 #define LUTRON_PASS "integration"			            // *
 #define SYSLOG_IDENT    "lutrond"
 #define LOG_FILE_NAME   "/tmp/lutrond.log"		        // *
+#define SYSVAR_FILE_NAME "/tmp/lutrond.var"
+#define SYSVAR_QUERY_213    "?SYSVAR,213,1"                 // query used to stimulate dump of sysvar data file
+#define SYSVAR_QUERY_212    "?SYSVAR,212,1" 
 #define DB_FILE_NAME	"/tmp/lutrond.db"
 #define PID_FILE_NAME   "/tmp/lutrond.pid"
 
@@ -134,6 +137,7 @@ typedef struct{
     char *log_file;
     char *pid_file;
     char *db_file;
+    char *sysvar_file;
     FILE *logfp;
 }daemon_t;            // daemon config parameters
 
@@ -176,6 +180,7 @@ void sigchldHandler(int);
 void sighupHandler(int);
 void sigtermHandler(int);
 int dump_db();
+int dump_sysvar();
 void keepAlive();
 void usageError(const char *);
 void killTelnet();

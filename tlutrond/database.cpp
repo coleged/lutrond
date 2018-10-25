@@ -23,6 +23,35 @@
 #include "lutrond.h"
 #include "externals.h"
 
+//*************** dump_sysvar()
+int
+dump_sysvar(){
+    static FILE *svfp;
+    
+    mode_t m;
+    m = umask(033);
+    svfp = fopen(admin.sysvar_file, "w");
+    umask(m);
+    
+    if (svfp == NULL){
+        logMessage("dump_sysvar(): Unable to open database file %s",admin.sysvar_file);
+        return(EXIT_FAILURE);
+    }
+    for(int i=1;i<NO_OF_DEVICES;i++){
+        if (device[i].type == 50){
+            fprintf(svfp,"%i\t=\t%s\t#%s:%s\n",i,
+                                            device[i].state,
+                                            device[i].name,
+                                            device[i].location
+                                            );
+        }
+    }//for i
+    fclose(svfp);
+    
+    return (EXIT_SUCCESS);
+    
+}// dump_sysvar()
+
 //*************** dump_db()
 int
 dump_db(){

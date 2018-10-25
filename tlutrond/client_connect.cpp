@@ -66,8 +66,16 @@ int writePipe(char *msg){
 //*****************keepAlive()
 void keepAlive()
 {
+    static const char q_sysvar1[] = SYSVAR_QUERY_213;
+    static const char q_sysvar2[] = SYSVAR_QUERY_212;
+    
     if(flag.debug)fprintf(stderr,"\n");
+        writePipe((char *)q_sysvar1);
+        writePipe((char *)"\n");
+        writePipe((char *)q_sysvar2);
+        writePipe((char *)"\n");
         writePipe(getString());
+        writePipe((char *)"\n");
 }
 //END*****************keepAlive()
 

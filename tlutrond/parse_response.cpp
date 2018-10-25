@@ -173,7 +173,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                 if(device[dev].name == NULL){ // we don't know about this device
                     device[dev].name = undef;
                     device[dev].location = undef;
-                    device[dev].type=99; // or should I set to 99 here and be done with it?
+                    device[dev].type=99;
                 }
                 switch (tok[1]){
                     case 'O':  // OUTPUT COMMAND
@@ -302,14 +302,12 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             free(script);
                         }
                     }// if ~DEVICE
-                    
-                    if (tok[1] == 'S'){ //~SYSVAR
-                        component = atoi(arg1); // tycically = 1
-                        action = atoi(arg2);    // AKA value
+                    if (tok[1] == 'S'){ // ~SYSVAR,<dev>,<action>,<value>  action = 1 always
                         
-                        // ~SYSVAR,<dev>,<action>,<value>  action = 1 always
-                        found=FALSE;
-                        n=1;
+                        //device[dev].state = (char *)malloc((int)strlen(arg2)+1);
+                        strcpy(device[dev].state,arg2);
+                        dump_sysvar();
+
                     }// if ~SYSVAR
                     
                 }// if inform

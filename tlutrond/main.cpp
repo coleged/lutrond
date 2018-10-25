@@ -43,6 +43,7 @@ daemon_t admin = {                              // admin.<var>
                     (char *)LOG_FILE_NAME,      // log_file
                     (char *)PID_FILE_NAME,      // pid_file
                     (char *)DB_FILE_NAME,       // db_file
+                    (char *)SYSVAR_FILE_NAME,   // db for lutron system variables
                     NULL                        // logfp
 };
 
