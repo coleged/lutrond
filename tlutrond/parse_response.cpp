@@ -130,7 +130,7 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     
     // Looking for string with following format
     //  [#~]{OUTPUT,DEVICE},<device>,<command>,<param 1>,....<paramN>
-    //  Other commands to manage include ERROR and TIMECLOCK
+    //  Other commands to manage include ERROR SYSVAR and TIMECLOCK
     
     char *tok,*cmd,*arg1,*arg2,*tmp;
     static char line[BUFFERSZ];             //TODO worry about static buffer and threads
@@ -150,11 +150,11 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
     bzero(line,BUFFERSZ);
     memcpy(line,pb,strlen(pb));
     
-    tok = strtok_r(line,"\r\n\0",&ptr1);     // all the ways a string might
-    // be terminated
-    // and in case we have multiple
-    // lines in buffer
-    while( tok != NULL ){
+    tok = strtok_r(line,"\r\n\0",&ptr1);    // all the ways a string might
+                                            // be terminated
+                                            // and in case we have multiple
+                                            // lines in buffer
+    while( tok != NULL ){                   // tok holds whole line
         switch(tok[0]){
             case 'Q':
                 // logMessage("QNET:>>");
@@ -168,12 +168,12 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                 cmd = (tmp=strtok_r(tok,",",&ptr2)) == NULL ? undef : tmp ; // first token
                 dev = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? 0 : atoi(tmp); // device
                 arg1 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
-                
+                // I think we are happy with this even though some command dont have a 4th token
                 arg2 = (tmp=strtok_r(NULL,",",&ptr2)) == NULL ? undef : tmp;
                 if(device[dev].name == NULL){ // we don't know about this device
                     device[dev].name = undef;
                     device[dev].location = undef;
-                    device[dev].type=0;
+                    device[dev].type=99; // or should I set to 99 here and be done with it?
                 }
                 switch (tok[1]){
                     case 'O':  // OUTPUT COMMAND
@@ -302,6 +302,15 @@ void parse_response(char *pre, char *pb){ // pre - prefix, pb buffer to parse
                             free(script);
                         }
                     }// if ~DEVICE
+                    
+                    if (tok[1] == 'S'){ //~SYSVAR
+                        component = atoi(arg1); // tycically = 1
+                        action = atoi(arg2);    // AKA value
+                        
+                        // ~SYSVAR,<dev>,<action>,<value>  action = 1 always
+                        found=FALSE;
+                        n=1;
+                    }// if ~SYSVAR
                     
                 }// if inform
                 inform = 0;

@@ -24,7 +24,7 @@
 #define MAC_OS10
 // #define LINUX
 
-// #define _ROOT_PRIV
+#define _ROOT_PRIV
 #define _DEBUG true
 #define _TEST_MODE false
 

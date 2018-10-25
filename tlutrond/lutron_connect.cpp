@@ -176,7 +176,8 @@ void* lutron_doit(void *arg){
                     if(FD_ISSET(lutron.fd, &read_fd)){
                         bzero(lutron_buff,lutron_buff_sz);
                         l_bytes=(int)read(lutron.fd,&lutron_buff,lutron_buff_sz);
-                        if(flag.debug)printf("\n");
+                        
+                        if(flag.debug)printf("DB>>%s\n",lutron_buff);
                         parse_response((char *)"LC>>",lutron_buff);
                     }//if ISSET lutron
                     if(FD_ISSET(pfd[0], &read_fd)){

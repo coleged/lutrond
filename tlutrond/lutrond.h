@@ -63,7 +63,7 @@ lutrond V4.0 April 2018
 
 
 #define MY_NAME "lutrond"
-#define VERSION "4.0.0"
+#define VERSION "4.0.1b"    // adding SYSVAR support
 
 #define TRUE	1
 #define FALSE	0

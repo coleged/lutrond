@@ -162,7 +162,7 @@ void* client_listen(void *arg){
                     while((bytes_in = (int)Readline(listener.actsockfd,
                                                soc_buffer,BUFFERSZ)) > 0 ){
                         write(listener.actsockfd,"thanks\n",7); // client waits for ack
-                        if(flag.debug) printf("%s\n",soc_buffer);
+                        if(flag.debug) printf("PIPE>>%s\n",soc_buffer);
                         writePipe(soc_buffer);
                     } // while Readline
                     if(flag.debug) printf("Done reading client\n");
